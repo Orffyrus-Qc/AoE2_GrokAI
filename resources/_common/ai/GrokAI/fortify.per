@@ -99,10 +99,9 @@
 	(wood-amount >= fort-wood-surplus)
 	(up-compare-goal mem-build-gate-now g:< mem-build-gate-cap)
 	(up-compare-goal mem-build-wall-now g:< mem-build-wall-cap)
-(or	(up-compare-goal mem-wall-tier == wall-tier-palisade)
+(or	(stone-amount < fort-stone-min)
 	(stone-amount < fort-stone-surplus))
 =>
-	(set-goal mem-wall-tier wall-tier-palisade)
 	(set-goal mem-wall-active 1)
 	(set-goal mem-wall-phase wall-phase-build)
 	(set-goal mem-wall-site wall-site-outer1)

@@ -17,9 +17,10 @@
 	(set-strategic-number sn-percent-enemy-sighted-response 100)
 	(set-strategic-number sn-coop-share-attacking 1))
 
-; Stone walls for every TC compound once castle age hits
+; Stone walls for every TC compound once stone stockpile is ready
 (defrule
-	(current-age >= castle-age)
+	(current-age >= feudal-age)
+	(stone-amount >= fort-stone-min)
 	(up-compare-goal mem-wall-tier < wall-tier-stone)
 =>
 	(set-goal mem-wall-tier wall-tier-stone))

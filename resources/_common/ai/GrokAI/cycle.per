@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v1.1 - Fortify cycle: walls, gates, and towers every 5 minutes
+; GrokAI v1.2 - Fortify cycle: walls, gates, and towers every 5 minutes
 ; Re-arms wall/gate waves, tower placement, and compound maintenance on timer.
 ;==============================================================================
 
@@ -12,6 +12,15 @@
 =>
 	(up-modify-goal mem-fortify-next-cycle g:= game-time)
 	(up-modify-goal mem-fortify-next-cycle c:+ fortify-cycle-interval))
+
+(defrule
+	(current-age >= feudal-age)
+	(goal inseln no)
+	(game-time >= mem-fortify-next-cycle)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier < wall-tier-stone)
+=>
+	(set-goal mem-wall-tier wall-tier-stone))
 
 ; ======================== CYCLE: WALLS + GATES WAVE ========================
 (defrule

@@ -1,6 +1,6 @@
 {
     "Author": "Orffyrus",
     "CacheStatus": 0,
-    "Description": "GrokAI v1.1: walls, gates, towers every 5 min. Adaptive compounds.",
+    "Description": "GrokAI v1.2: stone walls/gates on wall tiles. 5 min fortify cycle.",
     "Title": "GrokAI"
 }

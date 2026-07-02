@@ -1,0 +1,84 @@
+;==============================================================================
+; GrokAI v1.2 - Stone walls/gates preferred; gates only on existing wall tiles
+; Promotes stone tier at feudal; builds wall stub before any gate placement.
+;==============================================================================
+
+; ======================== PREFER STONE TIER (FEUDAL+) ========================
+(defrule
+	(current-age >= feudal-age)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier < wall-tier-stone)
+=>
+	(set-goal mem-wall-tier wall-tier-stone))
+
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-orchestrator-arm == 1)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier == wall-tier-palisade)
+=>
+	(set-goal mem-wall-tier wall-tier-stone))
+
+; ======================== STONE ECO FOR FORTIFY (FEUDAL+) ========================
+(defrule
+	(current-age >= feudal-age)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-wall-active == 1)
+(or	(up-compare-goal mem-stronghold-active == 1)
+(or	(up-compare-goal mem-tower-def-active == 1)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone))))
+	(strategic-number sn-stone-gatherer-percentage < eco-stone-stronghold-pct)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-stronghold-pct)
+	(set-strategic-number sn-gold-gatherer-percentage 6))
+
+(defrule
+	(current-age >= feudal-age)
+	(stone-amount < fort-stone-surplus)
+(or	(up-compare-goal mem-wall-active == 1)
+	(up-compare-goal mem-stronghold-active == 1))
+	(building-type-count mining-camp < 1)
+	(can-build-with-escrow mining-camp)
+	(wood-amount >= eco-stone-mine-wood-min)
+=>
+	(build mining-camp))
+
+; ======================== GATE OVER WALL: STONE STUB FIRST ========================
+(defrule
+	(current-age >= feudal-age)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)
+	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-can-build-line 0 saved-point-x c: stone-wall)
+=>
+	(up-build-line saved-point-x saved-point-x c: stone-wall)
+	(up-assign-builders c: wall-class c: 2)
+	(set-goal mem-wall-stuck 0))
+
+(defrule
+	(current-age >= feudal-age)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)
+	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(wood-amount >= wall-segment-wood)
+	(up-can-build-line 0 saved-point-x c: palisade-wall)
+=>
+	(up-build-line saved-point-x saved-point-x c: palisade-wall)
+	(up-assign-builders c: wall-class c: 2)
+	(set-goal mem-wall-stuck 0))
+
+; ======================== GATE OVER WALL: NEVER SKIP WALL TILE ========================
+(defrule
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)
+	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x position-self-x c: 1))
