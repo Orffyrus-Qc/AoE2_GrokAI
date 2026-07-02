@@ -1,6 +1,6 @@
 {
     "Author": "Orffyrus",
-    "CacheStatus": 1,
-    "Description": "GrokAI v1.3.1: buildguard ERR2008 fix. Stone fortify every 5 min.",
+    "CacheStatus": 0,
+    "Description": "GrokAI v1.4: large stone square compounds, expand every 5 min.",
     "Title": "GrokAI"
 }

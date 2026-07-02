@@ -1,0 +1,37 @@
+;==============================================================================
+; GrokAI v1.4 - Compound-first building placement (AdaptiveAI / LearningAI style)
+; Keeps economy buildings clustered inside the TC stone square compound.
+;==============================================================================
+
+(defrule
+	(building-type-count town-center >= 1)
+=>
+	(set-strategic-number sn-placement-to-center 1)
+	(set-strategic-number sn-placement-zone-size compound-build-zone)
+	(up-set-placement-data my-player-number town-center c: compound-build-near-tc-dist))
+
+(defrule
+	(building-type-count town-center >= 1)
+(or	(goal last-building 358)
+	(goal last-building-y 358))
+=>
+	(up-copy-point last-building position-self-x))
+
+(defrule
+	(building-type-count town-center >= 1)
+	(up-point-distance last-building position-self-x > compound-anchor-max-dist)
+=>
+	(up-copy-point last-building position-self-x))
+
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-stronghold-tc-done g:< mem-stronghold-tc-count)
+=>
+	(set-goal mem-compound-build-lock 1))
+
+(defrule
+	(up-compare-goal mem-compound-build-lock == 1)
+(or	(current-age < feudal-age)
+	(up-compare-goal mem-stronghold-tc-done g:>= mem-stronghold-tc-count))
+=>
+	(set-goal mem-compound-build-lock 0))

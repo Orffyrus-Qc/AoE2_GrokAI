@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v1.2 - Fortify cycle: walls, gates, and towers every 5 minutes
+; GrokAI v1.4 - Fortify cycle: expand stone compounds every 5 minutes
 ; Re-arms wall/gate waves, tower placement, and compound maintenance on timer.
 ;==============================================================================
 
@@ -22,40 +22,49 @@
 =>
 	(set-goal mem-wall-tier wall-tier-stone))
 
-; ======================== CYCLE: WALLS + GATES WAVE ========================
+; ======================== CYCLE: GROW SQUARE COMPOUND ========================
+(defrule
+	(current-age >= feudal-age)
+	(goal inseln no)
+	(game-time >= mem-fortify-next-cycle)
+	(up-compare-goal mem-compound-padding g:< stronghold-tc-padding-max)
+=>
+	(up-modify-goal mem-compound-padding c:+ compound-padding-step))
+
+; Re-ring every TC with stone square perimeter (keeps builders busy)
+(defrule
+	(current-age >= feudal-age)
+	(goal inseln no)
+	(game-time >= mem-fortify-next-cycle)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-stronghold-active != 1)
+	(building-type-count town-center >= 1)
+=>
+	(set-goal mem-wall-tier wall-tier-stone)
+	(set-goal mem-stronghold-tc-done 0)
+	(set-goal mem-stronghold-active 1)
+	(set-goal mem-stronghold-mode stronghold-mode-tc)
+	(set-goal mem-stronghold-index 0)
+	(set-goal mem-stronghold-seg stronghold-seg-setup)
+	(set-goal mem-stronghold-gate-type wall-gate-type0)
+	(set-goal mem-wall-stuck 0))
+
+; ======================== CYCLE: OUTER WALLS + GATES WAVE ========================
 (defrule
 	(current-age >= feudal-age)
 	(goal inseln no)
 	(game-time < wall-time-max)
 	(game-time >= mem-fortify-next-cycle)
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
-(or	(wood-amount >= wall-segment-wood)
-	(and	(current-age >= castle-age)
-		(stone-amount >= fort-stone-min)))
+	(stone-amount >= fort-stone-min)
 =>
+	(set-goal mem-wall-tier wall-tier-stone)
 	(set-goal mem-wall-active 1)
 	(set-goal mem-wall-phase wall-phase-build)
 	(set-goal mem-wall-site wall-site-outer1)
 	(set-goal mem-wall-segments wall-choke-seg-gate)
 	(set-goal mem-wall-stuck 0)
 	(set-goal mem-fort-wave 0))
-
-; First TC compound ring (feudal) on each cycle if not finished
-(defrule
-	(current-age >= feudal-age)
-	(goal inseln no)
-	(game-time >= mem-fortify-next-cycle)
-	(up-compare-goal mem-wall-phase == wall-phase-idle)
-	(up-compare-goal mem-wall-active != 1)
-	(building-type-count town-center >= 1)
-	(wood-amount >= wall-start-wood)
-=>
-	(set-goal mem-wall-active 1)
-	(set-goal mem-wall-site wall-site-tc)
-	(set-goal mem-wall-segments wall-side-south)
-	(set-goal mem-wall-dir wall-side-east)
-	(set-goal mem-wall-stuck 0)
-	(set-goal mem-wall-phase wall-phase-build))
 
 ; ======================== CYCLE: TOWERS WAVE ========================
 (defrule
@@ -99,7 +108,7 @@
 	(game-time >= mem-fortify-next-cycle)
 	(up-compare-goal mem-build-wall-cap g:< fort-wall-cap-max)
 =>
-	(up-modify-goal mem-build-wall-cap c:+ 4))
+	(up-modify-goal mem-build-wall-cap c:+ 8))
 
 (defrule
 	(current-age >= feudal-age)
@@ -107,10 +116,11 @@
 	(game-time >= mem-fortify-next-cycle)
 	(up-compare-goal mem-stronghold-tc-done g:< mem-stronghold-tc-count)
 	(up-compare-goal mem-stronghold-active != 1)
-(or	(wood-amount >= wall-segment-wood)
-	(and	(current-age >= castle-age)
-		(stone-amount >= fort-stone-min)))
+(or	(and	(stone-amount >= fort-stone-min)
+		(current-age >= feudal-age))
+	(wood-amount >= wall-segment-wood))
 =>
+	(set-goal mem-wall-tier wall-tier-stone)
 	(set-goal mem-stronghold-active 1)
 	(set-goal mem-stronghold-mode stronghold-mode-tc)
 	(up-modify-goal mem-stronghold-index g:= mem-stronghold-tc-done)
