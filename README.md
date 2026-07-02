@@ -15,6 +15,7 @@
 | **Fortify** | Progressive stone walls, extended chokes, castle-age guard towers |
 | **Cycle** | Every **5 minutes**: new walls, gates, towers, compound repair |
 | **Stone** | Stone walls and stone gates (all 4 orientations); gates only on wall tiles |
+| **Buildguard** | Wall/gate builders locked until task done; immune to gatherer retask |
 | **Military** | Unified attack blobs, population-scaled waves, siege escorts |
 | **Age** | Fast feudal → castle → imperial with food-heavy eco while aging |
 

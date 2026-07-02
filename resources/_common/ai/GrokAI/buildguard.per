@@ -1,0 +1,208 @@
+;==============================================================================
+; GrokAI v1.3 - Builder lock: wall/gate corps finish before base AI retasks
+; Loads last; reclaims group 19 and re-assigns builders every tick while locked.
+;==============================================================================
+
+; ======================== DETECT ACTIVE WALL/GATE BUILD WORK ========================
+(defrule
+	(current-age >= feudal-age)
+(or	(up-compare-goal mem-wall-active == 1)
+(or	(up-compare-goal mem-stronghold-active == 1)
+(or	(up-compare-goal mem-wall-phase == wall-phase-build)
+(or	(up-pending-objects c: stone-wall >= 1)
+(or	(up-pending-objects c: palisade-wall >= 1)
+(or	(up-pending-objects c: stone-gate1 >= 1)
+(or	(up-pending-objects c: stone-gate2 >= 1)
+(or	(up-pending-objects c: stone-gate3 >= 1)
+(or	(up-pending-objects c: stone-gate4 >= 1)
+(or	(up-pending-objects c: palisade-gate-foundation1 >= 1)
+(or	(up-pending-objects c: palisade-gate-foundation2 >= 1)
+(or	(up-pending-objects c: palisade-gate-foundation3 >= 1)
+	(up-pending-objects c: palisade-gate-foundation4 >= 1))))))))))))))
+=>
+	(set-goal mem-build-wall-gate-lock 1))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-compare-goal mem-wall-active != 1)
+	(up-compare-goal mem-stronghold-active != 1)
+	(up-compare-goal mem-wall-phase != wall-phase-build)
+	(up-pending-objects c: stone-wall < 1)
+	(up-pending-objects c: palisade-wall < 1)
+	(up-pending-objects c: stone-gate1 < 1)
+	(up-pending-objects c: stone-gate2 < 1)
+	(up-pending-objects c: stone-gate3 < 1)
+	(up-pending-objects c: stone-gate4 < 1)
+	(up-pending-objects c: palisade-gate-foundation1 < 1)
+	(up-pending-objects c: palisade-gate-foundation2 < 1)
+	(up-pending-objects c: palisade-gate-foundation3 < 1)
+	(up-pending-objects c: palisade-gate-foundation4 < 1)
+=>
+	(set-goal mem-build-wall-gate-lock 0))
+
+; ======================== SHIELD GROUP 19 FROM GATHERER RETASK ========================
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-group-size c: build-workers-group > 0)
+=>
+	(up-modify-group-flag 1 c: build-workers-group))
+
+; ======================== RE-ASSIGN BUILDERS (RUNS AFTER PROMISORY GATHERERS) ========================
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: stone-wall >= 1)
+	(up-compare-goal mem-build-wall-vills >= 2)
+=>
+	(up-assign-builders c: wall-class g: mem-build-wall-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: palisade-wall >= 1)
+	(up-compare-goal mem-build-wall-vills >= 2)
+=>
+	(up-assign-builders c: wall-class g: mem-build-wall-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: stone-gate1 >= 1)
+	(up-compare-goal mem-build-gate-vills >= 2)
+=>
+	(up-assign-builders c: stone-gate1 g: mem-build-gate-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: stone-gate2 >= 1)
+	(up-compare-goal mem-build-gate-vills >= 2)
+=>
+	(up-assign-builders c: stone-gate2 g: mem-build-gate-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: stone-gate3 >= 1)
+	(up-compare-goal mem-build-gate-vills >= 2)
+=>
+	(up-assign-builders c: stone-gate3 g: mem-build-gate-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: stone-gate4 >= 1)
+	(up-compare-goal mem-build-gate-vills >= 2)
+=>
+	(up-assign-builders c: stone-gate4 g: mem-build-gate-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: palisade-gate-foundation1 >= 1)
+	(up-compare-goal mem-build-gate-vills >= 2)
+=>
+	(up-assign-builders c: palisade-gate-foundation1 g: mem-build-gate-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: palisade-gate-foundation2 >= 1)
+	(up-compare-goal mem-build-gate-vills >= 2)
+=>
+	(up-assign-builders c: palisade-gate-foundation2 g: mem-build-gate-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: palisade-gate-foundation3 >= 1)
+	(up-compare-goal mem-build-gate-vills >= 2)
+=>
+	(up-assign-builders c: palisade-gate-foundation3 g: mem-build-gate-vills))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-pending-objects c: palisade-gate-foundation4 >= 1)
+	(up-compare-goal mem-build-gate-vills >= 2)
+=>
+	(up-assign-builders c: palisade-gate-foundation4 g: mem-build-gate-vills))
+
+; ======================== RECLAIM CORPS MEMBERS PULLED OFF WALL/GATE BUILD ========================
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-group-size c: build-workers-group > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: villager g: mem-build-pool-size)
+	(up-remove-objects search-local object-data-group-flag c:!= build-workers-group)
+	(up-remove-objects search-local object-data-order == orderid-build)
+	(up-get-search-state local-total))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-pending-objects c: stone-gate1 >= 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-group search-local c: build-workers-group)
+	(up-modify-group-flag 1 c: build-workers-group)
+	(up-full-reset-search)
+	(up-find-local c: stone-gate1 c: 16)
+	(up-find-local c: stone-gate2 c: 8)
+	(up-find-local c: stone-gate3 c: 8)
+	(up-find-local c: stone-gate4 c: 8)
+	(up-find-local c: palisade-gate-foundation1 c: 8)
+	(up-find-local c: palisade-gate-foundation2 c: 8)
+	(up-find-local c: palisade-gate-foundation3 c: 8)
+	(up-find-local c: palisade-gate-foundation4 c: 8)
+	(up-find-local c: stone-wall c: 32)
+	(up-find-local c: palisade-wall c: 32)
+	(up-set-target-object search-local c: 0)
+	(up-target-objects 0 action-default -1 -1))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-pending-objects c: stone-gate1 < 1)
+	(up-pending-objects c: stone-wall >= 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-group search-local c: build-workers-group)
+	(up-modify-group-flag 1 c: build-workers-group)
+	(up-full-reset-search)
+	(up-find-local c: stone-wall c: 48)
+	(up-find-local c: palisade-wall c: 32)
+	(up-set-target-object search-local c: 0)
+	(up-target-objects 0 action-default -1 -1))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-pending-objects c: stone-gate1 < 1)
+	(up-pending-objects c: stone-wall < 1)
+	(up-pending-objects c: palisade-wall >= 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-group search-local c: build-workers-group)
+	(up-modify-group-flag 1 c: build-workers-group)
+	(up-full-reset-search)
+	(up-find-local c: palisade-wall c: 48)
+	(up-set-target-object search-local c: 0)
+	(up-target-objects 0 action-default -1 -1))
+
+; ======================== INCREMENTAL CORPS FILL (NO RESET MID-LOCK) ========================
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(current-age >= feudal-age)
+	(up-group-size c: build-workers-group < mem-build-pool-size)
+	(up-compare-goal villagercount >= eco-fortify-vills-min)
+=>
+	(up-full-reset-search)
+	(up-find-local c: villager c: 1)
+	(up-remove-objects search-local object-data-group-flag c:== build-workers-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-food-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-patrol-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-escort-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-builder-group)
+	(up-remove-objects search-local object-data-group-flag c:== explore-army-group)
+	(up-remove-objects search-local object-data-order == orderid-build)
+	(up-get-search-state local-total))
+
+(defrule
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-group search-local c: build-workers-group)
+	(up-modify-group-flag 1 c: build-workers-group))

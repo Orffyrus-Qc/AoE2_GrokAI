@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v2.9 - Build corps prioritizes walls, gates, and towers
+; GrokAI v1.3 - Build corps prioritizes walls, gates, and towers
 ; Exclusive villagers for walls, gates, towers, TCs, castles, maintain/rebuild.
 ;==============================================================================
 
@@ -195,10 +195,19 @@
 	(up-modify-goal mem-build-raid-vills g:= raid-builder-vills))
 
 ; ======================== DEDICATED BUILD CORPS (GROUP 19) ========================
+; Full refresh only when wall/gate lock is off (buildguard handles locked recruits)
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-group-size c: build-workers-group > 0)
+=>
+	(up-modify-group-flag 1 c: build-workers-group))
+
 (defrule
 	(current-age >= feudal-age)
 	(up-group-size c: build-workers-group < mem-build-pool-size)
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
+	(up-compare-goal mem-build-wall-gate-lock != 1)
 =>
 	(up-modify-group-flag 0 c: build-workers-group)
 	(up-reset-group c: build-workers-group)
