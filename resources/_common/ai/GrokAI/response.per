@@ -1,0 +1,172 @@
+;==============================================================================
+; GrokAI v2.1 - Bridge detections into Promisory (won't pin finished fortify)
+;==============================================================================
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-drush)
+=>
+	(set-goal enemy-goal drush)
+	(set-goal trainpike yes)
+	(set-goal trainskirm yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-def-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-drush)
+	(up-compare-goal mem-wall-phase != wall-phase-done)
+=>
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-scout-rush)
+=>
+	(set-goal enemy-goal flush)
+	(set-goal trainpike yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-def-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-scout-rush)
+	(up-compare-goal mem-wall-phase != wall-phase-done)
+=>
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-archer-rush)
+=>
+	(set-goal enemy-goal rush)
+	(set-goal trainskirm yes)
+	(set-goal trainarcher yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-def-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-archer-rush)
+	(up-compare-goal mem-wall-phase != wall-phase-done)
+=>
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-maa-flush)
+=>
+	(set-goal enemy-goal drush)
+	(set-goal trainpike yes)
+	(set-goal trainchamp yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-def-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-maa-flush)
+	(up-compare-goal mem-wall-phase != wall-phase-done)
+=>
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-fast-castle)
+=>
+	(set-goal strategy s-flush)
+	(set-goal trainarcher yes)
+	(set-goal trainhussar yes)
+	(set-goal mem-rally-army 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-boom)
+=>
+	(set-goal strategy s-flush)
+	(set-goal trainarcher yes)
+	(set-goal trainhussar yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-off-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-siege)
+=>
+	(set-goal allowspears yes)
+	(set-goal trainskirm yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-def-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-siege)
+	(up-compare-goal mem-wall-phase != wall-phase-done)
+=>
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-smush)
+=>
+	(set-goal allowspears yes)
+	(set-goal trainskirm yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-def-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-smush)
+	(up-compare-goal mem-wall-phase != wall-phase-done)
+=>
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-detected-opening == opening-water)
+=>
+	(set-goal trainskirm yes)
+	(set-goal trainarcher yes)
+	(set-goal mem-rally-army 1))
+
+(defrule
+	(up-compare-goal mem-aggression-score >= 3)
+	(up-compare-goal mem-adapt-mode != adapt-pressure-castle)
+=>
+	(set-goal allowspears yes)
+	(set-goal trainskirm yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-def-active 1))
+
+(defrule
+	(up-compare-goal mem-aggression-score >= 3)
+	(up-compare-goal mem-adapt-mode != adapt-pressure-castle)
+	(up-compare-goal mem-wall-phase != wall-phase-done)
+=>
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-adapt-mode == adapt-defensive)
+=>
+	(set-goal allowspears yes)
+	(set-goal trainskirm yes)
+	(set-goal trainpike yes)
+	(set-goal mem-rally-army 1)
+	(set-goal mem-tower-def-active 1))
+
+(defrule
+	(up-compare-goal mem-adapt-mode == adapt-defensive)
+	(up-compare-goal mem-wall-phase != wall-phase-done)
+=>
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-adapt-mode == adapt-counter-archers)
+	(up-compare-goal mem-detected-opening == opening-archer-rush)
+	(players-current-age any-enemy >= castle-age)
+=>
+	(set-goal trainskirm yes)
+	(set-goal trainarcher yes)
+	(set-goal mem-rally-army 1))
+
+(defrule
+	(up-compare-goal mem-adapt-mode == adapt-counter-cavalry)
+	(up-compare-goal mem-detected-opening == opening-scout-rush)
+	(players-current-age any-enemy >= castle-age)
+=>
+	(set-goal trainpike yes)
+	(set-goal trainhussar yes)
+	(set-goal mem-rally-army 1))
+
+(defrule
+	(up-compare-goal mem-adapt-mode == adapt-counter-infantry)
+	(up-compare-goal mem-detected-opening == opening-maa-flush)
+	(players-current-age any-enemy >= castle-age)
+=>
+	(set-goal trainpike yes)
+	(set-goal trainchamp yes)
+	(set-goal mem-rally-army 1))

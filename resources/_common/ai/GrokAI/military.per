@@ -1,0 +1,650 @@
+;==============================================================================
+; GrokAI v4.0 - Unified mixed blobs + closest-target attack (no chase)
+; 1) Anti-TSA stream   2) Age-scaled waves   3) Opening/adapt profiles
+; 4) Siege+escort     5) Defend groups      6) Pre-attack rally
+;==============================================================================
+
+; ======================== 1) ANTI-STREAM CORE ========================
+(defrule
+	(true)
+=>
+	(set-strategic-number sn-task-ungrouped-soldiers 0)
+	(set-strategic-number sn-attack-group-size-randomness 0)
+	(set-strategic-number sn-attack-separation-time-randomness 0)
+	(set-strategic-number sn-group-commander-selection-method 0)
+	(set-strategic-number sn-ignore-attack-group-under-attack 1)
+	(set-strategic-number sn-group-leader-defense-distance group-leader-defense)
+	(set-strategic-number sn-scale-minimum-attack-group-size 0)
+	(set-strategic-number sn-scale-maximum-attack-group-size 0)
+	(disable-self))
+
+; Keep melee + ranged in the same attack blob (disable Promisory split micro)
+(defrule
+	(military-population >= group-rally-min)
+(or	(up-compare-goal mem-rally-army == 1)
+(or	(up-compare-goal attackmethod == groups)
+	(goal attacking yes)))
+=>
+	(set-goal group-micro no)
+	(set-goal melee-micro no)
+	(set-goal spreadunits no)
+	(set-strategic-number sn-task-ungrouped-soldiers 0))
+
+; Permanent group mode whenever we have a real army (blocks TSA trickle default)
+(defrule
+	(military-population >= group-rally-min)
+	(up-compare-goal attackmethod != groups)
+=>
+	(set-goal attackmethod groups))
+
+; Keep soldiers in attack groups, not released one-by-one by TSA town-size logic
+(defrule
+	(military-population >= group-rally-min)
+	(strategic-number sn-percent-attack-soldiers < 100)
+	(up-compare-goal mem-explore-active != 1)
+	(up-compare-goal mem-raid-active != 1)
+	(up-compare-goal mem-raid-route < 1)
+=>
+	(set-strategic-number sn-percent-attack-soldiers 100)
+	(set-strategic-number sn-number-attack-groups 1000))
+
+; Do not drag explore scouts or raiding flanks into main attack blob
+(defrule
+(or	(and	(up-compare-goal mem-explore-active == 1)
+		(up-group-size c: explore-army-group > 0))
+(or	(and	(up-compare-goal mem-raid-active == 1)
+		(up-group-size c: raid-food-group > 0))
+(or	(and	(up-compare-goal mem-raid-active == 1)
+		(up-group-size c: raid-patrol-group > 0))
+(or	(and	(up-compare-goal mem-raid-active == 1)
+		(up-group-size c: raid-escort-group > 0))
+	(and	(up-compare-goal mem-raid-route >= 1)
+		(up-group-size c: raid-food-group > 0))))))
+	(goal attacking no)
+=>
+	(set-strategic-number sn-percent-attack-soldiers 0)
+	(set-strategic-number sn-number-attack-groups 1))
+
+; Block Promisory default TSA on open maps once we have army to push
+(defrule
+	(military-population >= group-feudal-min)
+	(up-compare-goal attackmethod == TSA)
+(or	(goal attacking yes)
+(or	(up-compare-goal mem-rally-army == 1)
+	(up-compare-goal mem-adapt-mode == adapt-pressure-castle)))
+=>
+	(set-goal attackmethod groups)
+	(set-strategic-number sn-percent-attack-soldiers 100)
+	(set-strategic-number sn-number-attack-groups 1000))
+
+; Active attack: full group commitment (mixed melee + ranged waves)
+(defrule
+	(goal attacking yes)
+=>
+	(set-goal attackmethod groups)
+	(set-goal group-micro no)
+	(set-goal melee-micro no)
+	(set-goal spreadunits no)
+	(set-strategic-number sn-percent-attack-soldiers 100)
+	(set-strategic-number sn-number-attack-groups 1000)
+	(set-strategic-number sn-percent-attack-boats 100)
+	(set-strategic-number sn-number-boat-attack-groups 1000)
+	(set-strategic-number sn-task-ungrouped-soldiers 0)
+	(set-strategic-number sn-gather-defense-units 0)
+	(set-strategic-number sn-gather-idle-soldiers-at-center 0)
+	(set-strategic-number sn-group-form-distance group-form-normal)
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-normal)
+	(set-strategic-number sn-group-leader-defense-distance attack-chase-max)
+	(set-strategic-number sn-target-evaluation-distance attack-target-dist-bonus)
+	(set-strategic-number sn-target-evaluation-randomness 0)
+	(set-goal retargetenemy yes))
+
+; Restore default pursuit / target weights when not pushing
+(defrule
+	(up-compare-goal attacking != yes)
+=>
+	(set-strategic-number sn-group-leader-defense-distance group-leader-defense)
+	(set-strategic-number sn-target-evaluation-distance 0)
+	(set-strategic-number sn-target-evaluation-randomness 0))
+
+; ======================== CLOSEST-TARGET RETARGET (NO CHASE) ========================
+; Split across phased rules — AoE2 max ~40 actions per rule (ERR6002).
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-five-turns == 2)
+	(military-population >= group-rally-min)
+	(up-compare-goal temporary-goal != 1)
+=>
+	(up-full-reset-search)
+	(up-filter-exclude -1 actionid-explore orderid-explore -1)
+	(up-find-local c: scout-cavalry-line c: 80)
+	(up-find-local c: archer-line c: 80)
+	(up-find-local c: skirmisher-line c: 80)
+	(up-find-local c: cavalry-archer-line c: 80)
+	(up-find-local c: knight-line c: 80)
+	(up-find-local c: spearman-line c: 80)
+	(up-find-local c: militiaman-line c: 80)
+	(up-remove-objects search-local object-data-group-flag c:== raid-food-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-patrol-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-escort-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-builder-group)
+	(up-remove-objects search-local object-data-group-flag c:== build-workers-group)
+	(up-remove-objects search-local object-data-group-flag c:== explore-army-group)
+	(up-set-target-point position-self-x)
+	(up-clean-search search-local object-data-distance search-order-desc)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object point2-x)
+	(set-goal temporary-goal 1))
+
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-five-turns == 2)
+	(up-compare-goal temporary-goal == 1)
+=>
+	(up-full-reset-search)
+	(up-modify-sn sn-focus-player-number s:= sn-target-player-number)
+	(up-set-target-point point2-x)
+	(up-find-remote c: militiaman-line c: 24)
+	(up-find-remote c: archer-line c: 24)
+	(up-find-remote c: skirmisher-line c: 24)
+	(up-find-remote c: scout-cavalry-line c: 24)
+	(up-find-remote c: knight-line c: 24)
+	(up-find-remote c: cavalry-archer-line c: 24)
+	(up-find-remote c: spearman-line c: 24)
+	(up-find-remote c: monk c: 8)
+	(up-filter-distance c: -1 c: attack-retarget-radius)
+	(set-goal temporary-goal 2))
+
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-five-turns == 2)
+	(up-compare-goal temporary-goal == 2)
+	(up-compare-goal remote-total > 0)
+=>
+	(up-find-local c: scout-cavalry-line c: 80)
+	(up-find-local c: archer-line c: 80)
+	(up-find-local c: skirmisher-line c: 80)
+	(up-find-local c: cavalry-archer-line c: 80)
+	(up-find-local c: knight-line c: 80)
+	(up-find-local c: spearman-line c: 80)
+	(up-find-local c: militiaman-line c: 80)
+	(up-remove-objects search-local object-data-group-flag c:== raid-food-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-patrol-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-escort-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-builder-group)
+	(up-remove-objects search-local object-data-group-flag c:== build-workers-group)
+	(up-remove-objects search-local object-data-group-flag c:== explore-army-group)
+	(up-target-objects 0 action-default -1 stance-aggressive)
+	(set-goal temporary-goal 0))
+
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-five-turns == 2)
+	(up-compare-goal temporary-goal == 2)
+	(up-compare-goal remote-total <= 0)
+=>
+	(set-goal temporary-goal 0))
+
+(defrule
+	(up-compare-goal attacking != yes)
+	(up-compare-goal temporary-goal > 0)
+=>
+	(set-goal temporary-goal 0))
+
+; Undo spread-mode during pushes (causes linear streaming)
+(defrule
+	(goal attacking yes)
+	(goal spreadunits yes)
+=>
+	(set-goal spreadunits no)
+	(set-strategic-number sn-task-ungrouped-soldiers 0))
+
+; Undo TSA re-switch while attacking
+(defrule
+	(goal attacking yes)
+	(up-compare-goal attackmethod == TSA)
+=>
+	(set-goal attackmethod groups)
+	(set-strategic-number sn-percent-attack-soldiers 100)
+	(set-strategic-number sn-number-attack-groups 1000))
+
+; Promisory TSA-timer sabotage: restores size-1 groups and huge spacing
+(defrule
+	(military-population >= group-feudal-min)
+(or	(goal attacking yes)
+	(up-compare-goal mem-rally-army == 1))
+(or	(strategic-number sn-minimum-attack-group-size <= 1)
+(or	(strategic-number sn-maximum-attack-group-size <= 1)
+(or	(strategic-number sn-attack-group-gather-spacing >= 15)
+	(strategic-number sn-percent-attack-soldiers < 100))))
+=>
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-normal)
+	(set-strategic-number sn-percent-attack-soldiers 100)
+	(set-strategic-number sn-number-attack-groups 1000)
+	(set-strategic-number sn-minimum-attack-group-size group-feudal-min)
+	(set-strategic-number sn-maximum-attack-group-size group-feudal-max))
+
+; ======================== 6) PRE-ATTACK RALLY ========================
+(defrule
+	(up-compare-goal attacking != yes)
+	(military-population >= group-rally-min)
+(or	(players-military-population any-enemy >= 8)
+(or	(up-compare-goal mem-detected-opening != opening-unknown)
+(or	(up-compare-goal mem-aggression-score >= 4)
+(or	(up-compare-goal mem-adapt-mode == adapt-pressure-castle)
+	(up-compare-goal mem-attack-events >= 4)))))
+=>
+	(set-goal mem-rally-army 1)
+	(set-goal attackmethod groups))
+
+; Big army with no active push: stage behind TC instead of trickling
+(defrule
+	(up-compare-goal attacking != yes)
+	(up-compare-goal mem-rally-army != 1)
+	(goal underattack no)
+(or	(and	(strategic-number sn-current-age == feudal)
+		(military-population >= group-rally-big-feudal))
+	(and	(strategic-number sn-current-age >= castlea)
+		(military-population >= group-rally-big-castle)))
+=>
+	(set-goal mem-rally-army 1)
+	(set-goal attackmethod groups))
+
+; Safe-area staging: one mixed blob at TC, hold until Promisory commits attack
+(defrule
+	(up-compare-goal mem-rally-army == 1)
+	(up-compare-goal attacking != yes)
+	(military-population >= group-rally-min)
+=>
+	(set-goal attackmethod groups)
+	(set-goal group-micro no)
+	(set-goal melee-micro no)
+	(set-goal spreadunits no)
+	(set-strategic-number sn-percent-attack-soldiers 0)
+	(set-strategic-number sn-number-attack-groups 1)
+	(set-strategic-number sn-gather-idle-soldiers-at-center 1)
+	(set-strategic-number sn-task-ungrouped-soldiers 0)
+	(set-strategic-number sn-group-form-distance group-form-loose)
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-loose))
+
+(defrule
+	(up-compare-goal mem-rally-army == 1)
+	(up-compare-goal attacking != yes)
+	(strategic-number sn-current-age == feudal)
+	(military-population >= group-rally-min)
+=>
+	(up-modify-sn sn-minimum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-minimum-attack-group-size c:* group-safe-blob-pct-num)
+	(up-modify-sn sn-minimum-attack-group-size c:/ group-safe-blob-pct-den)
+	(up-modify-sn sn-minimum-attack-group-size c:min group-safe-blob-min)
+	(up-modify-sn sn-minimum-attack-group-size c:max group-safe-blob-feudal-cap)
+	(up-modify-sn sn-maximum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-maximum-attack-group-size c:min sn-minimum-attack-group-size)
+	(up-modify-sn sn-maximum-attack-group-size c:max group-safe-blob-feudal-cap))
+
+(defrule
+	(up-compare-goal mem-rally-army == 1)
+	(up-compare-goal attacking != yes)
+	(strategic-number sn-current-age == castlea)
+	(military-population >= group-rally-castle-min)
+=>
+	(up-modify-sn sn-minimum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-minimum-attack-group-size c:* group-safe-blob-pct-num)
+	(up-modify-sn sn-minimum-attack-group-size c:/ group-safe-blob-pct-den)
+	(up-modify-sn sn-minimum-attack-group-size c:min group-rally-castle-min)
+	(up-modify-sn sn-minimum-attack-group-size c:max group-safe-blob-castle-cap)
+	(up-modify-sn sn-maximum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-maximum-attack-group-size c:min sn-minimum-attack-group-size)
+	(up-modify-sn sn-maximum-attack-group-size c:max group-safe-blob-castle-cap))
+
+(defrule
+	(up-compare-goal mem-rally-army == 1)
+	(up-compare-goal attacking != yes)
+	(strategic-number sn-current-age >= imperial)
+	(military-population >= group-imp-min)
+=>
+	(up-modify-sn sn-minimum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-minimum-attack-group-size c:* group-safe-blob-pct-num)
+	(up-modify-sn sn-minimum-attack-group-size c:/ group-safe-blob-pct-den)
+	(up-modify-sn sn-minimum-attack-group-size c:min group-imp-min)
+	(up-modify-sn sn-minimum-attack-group-size c:max group-safe-blob-imp-cap)
+	(up-modify-sn sn-maximum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-maximum-attack-group-size c:min sn-minimum-attack-group-size)
+	(up-modify-sn sn-maximum-attack-group-size c:max group-safe-blob-imp-cap))
+
+; Defensive posture: hold larger rally blob before committing
+(defrule
+	(up-compare-goal mem-rally-army == 1)
+	(up-compare-goal attacking != yes)
+	(up-compare-goal mem-adapt-mode == adapt-defensive)
+	(military-population >= group-defend-min)
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-defend-min)
+	(set-strategic-number sn-maximum-attack-group-size group-defend-heavy-max)
+	(set-strategic-number sn-group-form-distance group-form-loose)
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-loose))
+
+(defrule
+	(goal attacking yes)
+=>
+	(set-goal mem-rally-army 0))
+
+; ======================== 3) OPENING-SPECIFIC GROUP PROFILES =========
+; vs Archer rush: skirm-heavy blob, medium-tight formation
+(defrule
+	(goal attacking yes)
+	(up-compare-goal mem-detected-opening == opening-archer-rush)
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-vs-archer-min)
+	(set-strategic-number sn-maximum-attack-group-size group-vs-archer-max)
+	(set-strategic-number sn-group-form-distance group-form-loose)
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-loose))
+
+; vs Scout rush: compact spears, tighter formation
+(defrule
+	(goal attacking yes)
+	(up-compare-goal mem-detected-opening == opening-scout-rush)
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-vs-cav-min)
+	(set-strategic-number sn-maximum-attack-group-size group-vs-cav-max)
+	(set-strategic-number sn-group-form-distance group-form-tight)
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-tight))
+
+; vs Drush / MAA: chunky infantry counter waves
+(defrule
+	(goal attacking yes)
+(or	(up-compare-goal mem-detected-opening == opening-drush)
+	(up-compare-goal mem-detected-opening == opening-maa-flush))
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-vs-infantry-min)
+	(set-strategic-number sn-maximum-attack-group-size group-vs-infantry-max)
+	(set-strategic-number sn-group-form-distance group-form-normal)
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-normal))
+
+; vs Fast castle: fast pressure waves
+(defrule
+	(goal attacking yes)
+(or	(up-compare-goal mem-detected-opening == opening-fast-castle)
+	(up-compare-goal mem-adapt-mode == adapt-pressure-castle))
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-pressure-min)
+	(set-strategic-number sn-maximum-attack-group-size group-pressure-max)
+	(set-strategic-number sn-group-form-distance group-form-tight)
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-tight))
+
+; Counter-adapt modes: large safe waves (mid-game pivots included)
+(defrule
+	(goal attacking yes)
+(or	(up-compare-goal mem-adapt-mode == adapt-counter-archers)
+(or	(up-compare-goal mem-adapt-mode == adapt-counter-cavalry)
+	(up-compare-goal mem-adapt-mode == adapt-counter-infantry)))
+	(up-compare-goal mem-detected-opening == opening-unknown)
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-counter-min)
+	(set-strategic-number sn-maximum-attack-group-size group-counter-max)
+	(set-strategic-number sn-group-form-distance group-form-loose))
+
+; ======================== 2) AGE-SCALED DEFAULT WAVES =================
+(defrule
+	(goal attacking yes)
+	(up-compare-goal mem-detected-opening == opening-unknown)
+	(up-compare-goal mem-adapt-mode == adapt-balanced)
+	(strategic-number sn-current-age == feudal)
+	(military-population >= group-feudal-min)
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-feudal-min)
+	(set-strategic-number sn-maximum-attack-group-size group-feudal-max))
+
+(defrule
+	(goal attacking yes)
+	(up-compare-goal mem-detected-opening == opening-unknown)
+	(strategic-number sn-current-age == castlea)
+	(military-population >= group-castle-min)
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-castle-min)
+	(set-strategic-number sn-maximum-attack-group-size group-castle-max))
+
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-current-age >= imperial)
+	(military-population >= group-imp-min)
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-imp-min)
+	(up-modify-sn sn-maximum-attack-group-size g:max allowed-num-military)
+	(up-modify-sn sn-maximum-attack-group-size c:min group-imp-max)
+	(up-modify-sn sn-maximum-attack-group-size c:max 60))
+
+; ======================== 7) POPULATION-SCALED GROUP SIZES ========================
+; Attack waves: scale min + max with military population
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-current-age == feudal)
+	(military-population >= group-scale-mpop-feudal)
+=>
+	(up-modify-sn sn-minimum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-minimum-attack-group-size c:/ group-scale-div-min-feudal)
+	(up-modify-sn sn-minimum-attack-group-size c:min group-feudal-min)
+	(up-modify-sn sn-minimum-attack-group-size c:max group-feudal-max)
+	(up-modify-sn sn-maximum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-maximum-attack-group-size c:/ group-scale-div-max-feudal)
+	(up-modify-sn sn-maximum-attack-group-size c:min sn-minimum-attack-group-size)
+	(up-modify-sn sn-maximum-attack-group-size c:max group-feudal-max))
+
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-current-age == castlea)
+	(military-population >= group-scale-mpop-castle)
+=>
+	(up-modify-sn sn-minimum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-minimum-attack-group-size c:/ group-scale-div-min-castle)
+	(up-modify-sn sn-minimum-attack-group-size c:min group-castle-min)
+	(up-modify-sn sn-minimum-attack-group-size c:max group-castle-max)
+	(up-modify-sn sn-maximum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-maximum-attack-group-size c:/ group-scale-div-max-castle)
+	(up-modify-sn sn-maximum-attack-group-size c:min sn-minimum-attack-group-size)
+	(up-modify-sn sn-maximum-attack-group-size c:max group-castle-max))
+
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-current-age >= imperial)
+	(military-population >= group-scale-mpop-imp)
+=>
+	(up-modify-sn sn-minimum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-minimum-attack-group-size c:/ group-scale-div-min-imp)
+	(up-modify-sn sn-minimum-attack-group-size c:min group-imp-min)
+	(up-modify-sn sn-minimum-attack-group-size c:max group-imp-max)
+	(up-modify-sn sn-maximum-attack-group-size g:max my-mpop)
+	(up-modify-sn sn-maximum-attack-group-size c:/ group-scale-div-max-imp)
+	(up-modify-sn sn-maximum-attack-group-size c:min sn-minimum-attack-group-size)
+	(up-modify-sn sn-maximum-attack-group-size g:max allowed-num-military)
+	(up-modify-sn sn-maximum-attack-group-size c:min group-imp-max)
+	(up-modify-sn sn-maximum-attack-group-size c:max group-scale-imp-max-cap))
+
+; Defense: larger gather blobs as army grows
+(defrule
+	(goal underattack yes)
+	(military-population >= group-defend-min)
+=>
+	(up-modify-sn sn-minimum-defend-group-size g:max my-mpop)
+	(up-modify-sn sn-minimum-defend-group-size c:/ group-scale-div-min-castle)
+	(up-modify-sn sn-minimum-defend-group-size c:min group-defend-min)
+	(up-modify-sn sn-minimum-defend-group-size c:max group-defend-max)
+	(up-modify-sn sn-maximum-defend-group-size g:max my-mpop)
+	(up-modify-sn sn-maximum-defend-group-size c:/ group-scale-div-max-castle)
+	(up-modify-sn sn-maximum-defend-group-size c:min sn-minimum-defend-group-size)
+	(up-modify-sn sn-maximum-defend-group-size c:max group-defend-max))
+
+(defrule
+	(goal underattack yes)
+	(military-population >= group-defend-heavy-min)
+(or	(up-compare-goal mem-detected-opening == opening-drush)
+(or	(up-compare-goal mem-detected-opening == opening-maa-flush)
+(or	(up-compare-goal mem-aggression-score >= 4)
+	(up-compare-goal mem-attack-events >= 4))))
+=>
+	(up-modify-sn sn-minimum-defend-group-size g:max my-mpop)
+	(up-modify-sn sn-minimum-defend-group-size c:/ group-scale-div-min-imp)
+	(up-modify-sn sn-minimum-defend-group-size c:min group-defend-heavy-min)
+	(up-modify-sn sn-minimum-defend-group-size c:max group-defend-heavy-max)
+	(up-modify-sn sn-maximum-defend-group-size g:max my-mpop)
+	(up-modify-sn sn-maximum-defend-group-size c:/ group-scale-div-max-imp)
+	(up-modify-sn sn-maximum-defend-group-size c:min sn-minimum-defend-group-size)
+	(up-modify-sn sn-maximum-defend-group-size c:max group-defend-heavy-max))
+
+; Total population tiers: extra bump to attack + defend group caps
+(defrule
+	(population >= group-scale-pop-tier1)
+(or	(goal attacking yes)
+(or	(up-compare-goal mem-rally-army == 1)
+	(goal underattack yes)))
+=>
+	(up-modify-sn sn-minimum-attack-group-size c:+ group-scale-pop-boost1)
+	(up-modify-sn sn-maximum-attack-group-size c:+ group-scale-pop-max-boost1)
+	(up-modify-sn sn-minimum-defend-group-size c:+ group-scale-pop-boost1)
+	(up-modify-sn sn-maximum-defend-group-size c:+ group-scale-pop-max-boost1))
+
+(defrule
+	(population >= group-scale-pop-tier2)
+(or	(goal attacking yes)
+(or	(up-compare-goal mem-rally-army == 1)
+	(goal underattack yes)))
+=>
+	(up-modify-sn sn-minimum-attack-group-size c:+ group-scale-pop-boost2)
+	(up-modify-sn sn-maximum-attack-group-size c:+ group-scale-pop-max-boost2)
+	(up-modify-sn sn-minimum-defend-group-size c:+ group-scale-pop-boost2)
+	(up-modify-sn sn-maximum-defend-group-size c:+ group-scale-pop-max-boost2))
+
+(defrule
+	(population >= group-scale-pop-tier3)
+(or	(goal attacking yes)
+(or	(up-compare-goal mem-rally-army == 1)
+	(goal underattack yes)))
+=>
+	(up-modify-sn sn-minimum-attack-group-size c:+ group-scale-pop-boost2)
+	(up-modify-sn sn-maximum-attack-group-size c:+ group-scale-pop-max-boost3)
+	(up-modify-sn sn-minimum-defend-group-size c:+ group-scale-pop-boost2)
+	(up-modify-sn sn-maximum-defend-group-size c:+ group-scale-pop-max-boost3))
+
+; ======================== 4) SIEGE + ESCORT ===========================
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-current-age >= castlea)
+	(military-population >= group-siege-escort-min)
+(or	(building-type-count siege-workshop >= 1)
+(or	(unit-type-count-total battering-ram-line >= 1)
+(or	(unit-type-count-total mangonel-line >= 1)
+	(unit-type-count-total scorpion-line >= 1))))
+=>
+	(set-goal siegevar yes)
+	(set-strategic-number sn-garrison-rams 1)
+	(set-strategic-number sn-target-evaluation-siege-weapon siege-target-bonus)
+	(set-strategic-number sn-group-form-distance group-form-loose)
+	(set-strategic-number sn-attack-group-gather-spacing group-spacing-loose)
+	(set-goal trainram yes)
+	(set-goal trainscorpion yes)
+	(set-goal trainmangonel yes))
+
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-current-age >= castlea)
+	(military-population >= group-siege-min)
+(or	(unit-type-count-total battering-ram-line >= 1)
+(or	(unit-type-count-total mangonel-line >= 1)
+	(unit-type-count-total scorpion-line >= 1)))
+=>
+	(set-strategic-number sn-minimum-attack-group-size group-siege-min)
+	(set-strategic-number sn-maximum-attack-group-size group-siege-max))
+
+(defrule
+	(goal attacking yes)
+	(strategic-number sn-current-age >= imperial)
+	(military-population >= group-siege-min)
+	(building-type-count siege-workshop >= 1)
+=>
+	(set-goal trainbombard yes)
+	(set-goal traintrebuchet yes))
+
+; Never send siege alone — wait for escort if only siege units exist
+(defrule
+	(goal attacking yes)
+	(military-population < group-siege-escort-min)
+(or	(unit-type-count-total battering-ram-line >= 1)
+(or	(unit-type-count-total mangonel-line >= 1)
+	(unit-type-count-total scorpion-line >= 1)))
+	(unit-type-count-total archer-line < 4)
+	(unit-type-count-total skirmisher-line < 4)
+	(unit-type-count-total spearman-line < 4)
+	(unit-type-count-total knight-line < 2)
+	(unit-type-count-total militiaman-line < 4)
+=>
+	(set-goal mem-rally-army 1)
+	(set-strategic-number sn-minimum-attack-group-size group-siege-escort-min)
+	(set-strategic-number sn-maximum-attack-group-size group-rally-max))
+
+; ======================== 5) DEFEND IN GROUPS ========================
+(defrule
+	(goal underattack yes)
+	(military-population >= group-defend-min)
+=>
+	(set-strategic-number sn-number-defend-groups group-defend-groups)
+	(set-strategic-number sn-minimum-defend-group-size group-defend-min)
+	(set-strategic-number sn-maximum-defend-group-size group-defend-max)
+	(set-strategic-number sn-percent-enemy-sighted-response 100)
+	(set-strategic-number sn-gather-defense-units 1)
+	(set-strategic-number sn-allow-civilian-defense 1))
+
+; vs archer play: tighter defend blobs to trade efficiently
+(defrule
+	(goal underattack yes)
+	(up-compare-goal mem-detected-opening == opening-archer-rush)
+	(military-population >= group-defend-min)
+=>
+	(set-strategic-number sn-number-defend-groups group-defend-groups)
+	(set-strategic-number sn-minimum-defend-group-size group-vs-archer-min)
+	(set-strategic-number sn-maximum-defend-group-size group-vs-archer-max))
+
+; Heavy defense when enemy was aggressive or drushed us
+(defrule
+	(goal underattack yes)
+(or	(up-compare-goal mem-detected-opening == opening-drush)
+(or	(up-compare-goal mem-detected-opening == opening-maa-flush)
+(or	(up-compare-goal mem-aggression-score >= 4)
+	(up-compare-goal mem-attack-events >= 4))))
+	(military-population >= group-defend-heavy-min)
+=>
+	(set-strategic-number sn-number-defend-groups group-defend-groups)
+	(set-strategic-number sn-minimum-defend-group-size group-defend-heavy-min)
+	(set-strategic-number sn-maximum-defend-group-size group-defend-heavy-max))
+
+; Counter-raid group when raided but strong enough to fight back
+(defrule
+	(goal underattack yes)
+	(up-compare-goal attacking != yes)
+	(military-population >= group-castle-min)
+	(players-military-population any-enemy >= 5)
+=>
+	(set-goal attackmethod groups)
+	(set-strategic-number sn-percent-attack-soldiers 100)
+	(set-strategic-number sn-number-attack-groups 1000)
+	(set-strategic-number sn-minimum-attack-group-size group-counter-min)
+	(set-strategic-number sn-maximum-attack-group-size group-counter-max))
+
+(defrule
+	(goal underattack no)
+	(up-compare-goal attacking != yes)
+	(up-compare-goal mem-rally-army != 1)
+(or	(strategic-number sn-number-defend-groups > 0)
+(or	(strategic-number sn-minimum-defend-group-size > 1)
+	(strategic-number sn-gather-defense-units == 1)))
+=>
+	(set-strategic-number sn-number-defend-groups 0)
+	(set-strategic-number sn-minimum-defend-group-size 1)
+	(set-strategic-number sn-maximum-defend-group-size 1)
+	(set-strategic-number sn-gather-defense-units 0))
+
+(defrule
+	(up-compare-goal mem-rally-army != 1)
+	(up-compare-goal attacking != yes)
+	(strategic-number sn-gather-idle-soldiers-at-center == 1)
+=>
+	(set-strategic-number sn-gather-idle-soldiers-at-center 0))

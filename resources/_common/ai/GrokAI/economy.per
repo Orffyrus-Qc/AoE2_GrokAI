@@ -1,0 +1,196 @@
+;==============================================================================
+; GrokAI v4.0 - Economy: loud boom + stone for multi-TC compounds
+; Keeps villager momentum; limits gold/stone over-commit during growth.
+;==============================================================================
+
+; Keep training villagers through feudal/castle boom
+(defrule
+	(current-age >= feudal-age)
+	(current-age <= castle-age)
+	(up-compare-goal villagercount < eco-boom-vills-feudal)
+	(goal trainvillager no)
+	(food-amount >= 100)
+=>
+	(set-goal trainvillager yes))
+
+(defrule
+	(current-age >= castle-age)
+	(up-compare-goal villagercount < eco-boom-vills-castle)
+	(goal trainvillager no)
+	(food-amount >= 200)
+=>
+	(set-goal trainvillager yes))
+
+(defrule
+	(up-compare-goal mem-orchestrator-arm == 1)
+	(current-age >= castle-age)
+	(up-compare-goal villagercount < eco-boom-vills-loud)
+	(goal trainvillager no)
+	(food-amount >= 250)
+=>
+	(set-goal trainvillager yes))
+
+; Feudal: prioritize food + wood over gold/stone until boom targets met
+(defrule
+	(current-age == feudal-age)
+	(up-compare-goal villagercount < eco-boom-vills-feudal)
+	(strategic-number sn-food-gatherer-percentage < 55)
+=>
+	(set-strategic-number sn-food-gatherer-percentage 55)
+	(set-strategic-number sn-wood-gatherer-percentage 35)
+	(set-strategic-number sn-gold-gatherer-percentage 5)
+	(set-strategic-number sn-stone-gatherer-percentage 5))
+
+(defrule
+	(current-age == feudal-age)
+	(up-compare-goal villagercount < eco-boom-vills-feudal)
+	(food-amount < eco-boom-food-min)
+	(strategic-number sn-gold-gatherer-percentage > 8)
+=>
+	(set-strategic-number sn-gold-gatherer-percentage 5)
+	(set-strategic-number sn-stone-gatherer-percentage 3))
+
+; Castle: cap stone/gold until food stockpile is healthy
+(defrule
+	(current-age >= castle-age)
+	(food-amount < eco-boom-food-min)
+	(strategic-number sn-stone-gatherer-percentage > eco-stone-vills-max)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-vills-max))
+
+(defrule
+	(current-age >= castle-age)
+	(food-amount < eco-boom-food-min)
+	(wood-amount < eco-boom-wood-min)
+	(strategic-number sn-gold-gatherer-percentage > 10)
+=>
+	(set-strategic-number sn-gold-gatherer-percentage 8))
+
+; Scale villager count with growing build corps
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-build-pool-size >= build-pool-castle)
+	(up-compare-goal villagercount < 36)
+	(goal trainvillager no)
+	(food-amount >= 200)
+=>
+	(set-goal trainvillager yes))
+
+(defrule
+	(current-age >= castle-age)
+	(up-compare-goal mem-build-pool-size >= build-pool-imp)
+	(up-compare-goal villagercount < 42)
+	(goal trainvillager no)
+	(food-amount >= 250)
+=>
+	(set-goal trainvillager yes))
+
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-fortify-ready != 1)
+(or	(up-compare-goal mem-wall-active == 1)
+(or	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-tower-def-active == 1)))
+	(strategic-number sn-wood-gatherer-percentage < eco-fortify-wood-priority)
+	(not (and	(current-age == feudal-age)
+		(up-research-status c: castle-age < research-complete)))
+	(not (and	(current-age == castle-age)
+		(up-research-status c: imperial-age < research-complete)))
+	(not (and	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-stronghold-active == 1)
+		(up-compare-goal mem-wall-tier >= wall-tier-stone))))
+=>
+	(set-strategic-number sn-wood-gatherer-percentage eco-fortify-wood-priority)
+	(set-strategic-number sn-food-gatherer-percentage 42)
+	(set-strategic-number sn-gold-gatherer-percentage 5)
+	(set-strategic-number sn-stone-gatherer-percentage 5))
+
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-build-wall-now g:< mem-build-wall-cap)
+	(wood-amount < 200)
+	(strategic-number sn-wood-gatherer-percentage < 40)
+=>
+	(set-strategic-number sn-wood-gatherer-percentage 40))
+
+(defrule
+	(current-age >= castle-age)
+	(up-compare-goal mem-build-gate-now g:< mem-build-gate-cap)
+	(stone-amount < fort-stone-min)
+	(strategic-number sn-stone-gatherer-percentage < eco-stone-rush-pct)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-rush-pct))
+
+; Stone on demand: fortify/towers need stone now
+(defrule
+	(current-age >= castle-age)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+(or	(up-compare-goal mem-tower-def-active == 1)
+(or	(up-compare-goal mem-tower-off-active == 1)
+	(up-compare-goal mem-detected-opening == opening-siege))))
+	(strategic-number sn-stone-gatherer-percentage < eco-stone-rush-pct)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-rush-pct))
+
+; Stone rush: TC/castle stronghold compounds and stone wall tiers
+(defrule
+	(current-age >= castle-age)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-stronghold-active == 1)
+(or	(up-compare-goal mem-stronghold-tc-done g:< mem-stronghold-tc-count)
+	(up-compare-goal mem-compound-stone-pass g:< mem-stronghold-tc-count)))
+	(strategic-number sn-stone-gatherer-percentage < eco-stone-stronghold-pct)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-stronghold-pct)
+	(set-strategic-number sn-gold-gatherer-percentage 8))
+
+(defrule
+	(current-age >= castle-age)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+(or	(up-pending-objects c: stone-wall >= 1)
+	(up-pending-objects c: stone-gate1 >= 1)))
+	(strategic-number sn-stone-gatherer-percentage < eco-stone-stronghold-pct)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-stronghold-pct)
+	(set-strategic-number sn-gold-gatherer-percentage 8))
+
+(defrule
+	(current-age >= feudal-age)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone))
+	(building-type-count mining-camp < 1)
+	(can-build-with-escrow mining-camp)
+	(wood-amount >= eco-stone-mine-wood-min)
+=>
+	(build mining-camp))
+
+(defrule
+	(current-age >= castle-age)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-stronghold-active == 1)
+(or	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(up-pending-objects c: stone-wall >= 1)))
+	(building-type-count market >= 1)
+	(gold-amount >= eco-stone-trade-gold-min)
+	(can-buy-commodity stone)
+=>
+	(buy-commodity stone))
+
+; Release economy bias once boom targets are met (not during active fortify)
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal villagercount >= eco-boom-vills-castle)
+	(food-amount >= eco-boom-food-min)
+	(wood-amount >= eco-boom-wood-min)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-active != 1)
+	(up-compare-goal mem-tower-def-active != 1)
+	(strategic-number sn-food-gatherer-percentage >= 55)
+=>
+	(set-strategic-number sn-food-gatherer-percentage 0)
+	(set-strategic-number sn-wood-gatherer-percentage 0)
+	(set-strategic-number sn-gold-gatherer-percentage 0)
+	(set-strategic-number sn-stone-gatherer-percentage 0))

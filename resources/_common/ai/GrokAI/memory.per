@@ -1,0 +1,211 @@
+;==============================================================================
+; GrokAI - In-match memory initialization and rolling trackers
+;==============================================================================
+
+(defrule
+	(true)
+=>
+	(set-goal mem-detected-opening opening-unknown)
+	(set-goal mem-enemy-archer-peak 0)
+	(set-goal mem-enemy-cav-peak 0)
+	(set-goal mem-enemy-infantry-peak 0)
+	(set-goal mem-attack-events 0)
+	(set-goal mem-aggression-score 0)
+	(set-goal mem-last-scout-tick 0)
+	(set-goal mem-adapt-mode adapt-balanced)
+	(set-goal mem-rally-army 0)
+	(disable-self))
+
+(defrule
+	(true)
+=>
+	(set-goal mem-wall-active 0)
+	(set-goal mem-wall-phase wall-phase-idle)
+	(set-goal mem-wall-segments 0)
+	(set-goal mem-wall-stuck 0)
+	(set-goal mem-wall-dir wall-side-east)
+	(set-goal mem-wall-site wall-site-tc)
+	(set-goal mem-fort-wave 0)
+	(set-goal mem-wall-tier wall-tier-palisade)
+	(set-goal mem-wall-gate-type wall-gate-type0)
+	(set-goal mem-stronghold-active 0)
+	(set-goal mem-stronghold-mode 0)
+	(set-goal mem-stronghold-index 0)
+	(set-goal mem-stronghold-seg 0)
+	(set-goal mem-stronghold-gate-type wall-gate-type0)
+	(set-goal mem-stronghold-next-maintain 0)
+	(set-goal mem-stronghold-tc-done 0)
+	(set-goal mem-stronghold-castle-done 0)
+	(set-goal mem-stronghold-tc-count 0)
+	(set-goal mem-stronghold-castle-count 0)
+	(disable-self))
+
+(defrule
+	(true)
+=>
+	(set-goal mem-tower-wave 0)
+	(set-goal mem-tower-def-active 0)
+	(set-goal mem-tower-off-active 0)
+	(set-goal mem-tower-def-slot 0)
+	(set-goal mem-tower-off-slot 0)
+	(set-goal mem-tower-stuck 0)
+	(set-goal mem-enemy-tc-count 0)
+	(set-goal mem-enemy-castle-count 0)
+	(set-goal mem-enemy-siege-peak 0)
+	(disable-self))
+
+(defrule
+	(true)
+=>
+	(set-goal mem-enemy-monk-peak 0)
+	(set-goal mem-enemy-mil-peak 0)
+	(set-goal mem-superiority-peak 0)
+	(set-goal mem-peace-since 0)
+	(set-goal mem-fortify-ready 0)
+	(set-goal mem-attack-lock 0)
+	(set-goal mem-attack-sustain 0)
+	(set-goal mem-attack-peak 0)
+	(set-goal mem-attack-floor 0)
+	(set-goal mem-raid-active 0)
+	(set-goal mem-raid-pick 0)
+	(set-goal mem-raid-retarget 0)
+	(set-goal mem-raid-next-pick 0)
+	(set-goal mem-raid-build 0)
+	(set-goal mem-raid-has-site 0)
+	(set-goal mem-raid-stuck 0)
+	(set-goal mem-raid-route 0)
+	(set-goal mem-raid-path-enemy 0)
+	(set-goal mem-raid-has-target 0)
+	(set-goal mem-attack-recover 0)
+	(set-goal mem-attack-recover-until 0)
+	(set-goal mem-explore-active 0)
+	(set-goal mem-explore-enemy-seen 0)
+	(set-goal mem-explore-food-seen 0)
+	(set-goal mem-explore-waypoint 0)
+	(set-goal mem-explore-next-send 0)
+	(set-goal mem-explore-next-scan 0)
+	(set-goal mem-raid-build-step 0)
+	(disable-self))
+
+; Build corps init (split — AoE2 rules max ~40 actions, ERR6002)
+(defrule
+	(true)
+=>
+	(set-goal mem-build-pool-size 0)
+	(set-goal mem-build-wall-vills 0)
+	(set-goal mem-build-gate-vills 0)
+	(set-goal mem-build-tower-vills 0)
+	(set-goal mem-build-struct-vills 0)
+	(set-goal mem-build-repair-vills 0)
+	(set-goal mem-build-raid-vills 0)
+	(set-goal mem-build-gate-cap fort-gate-cap)
+	(set-goal mem-build-wall-cap fort-wall-cap)
+	(set-goal mem-build-gate-now 0)
+	(set-goal mem-build-wall-now 0)
+	(set-goal mem-build-next-ramp 0)
+	(set-goal mem-gate-align gate-align-none)
+	(set-goal mem-gate-stone-align gate-align-none)
+	(set-goal mem-compound-gate-side wall-side-east)
+	(set-goal mem-compound-side-len 0)
+	(set-goal mem-explore-retreat 0)
+	(set-goal mem-explore-threat-near 0)
+	(set-goal mem-orchestrator-arm 0)
+	(set-goal mem-compound-stone-pass 0)
+	(disable-self))
+
+; Peak archer count (stepped thresholds)
+(defrule
+	(players-unit-type-count any-enemy archer-line >= 5)
+	(up-compare-goal mem-enemy-archer-peak < 5)
+=>
+	(set-goal mem-enemy-archer-peak 5))
+(defrule
+	(players-unit-type-count any-enemy archer-line >= 10)
+	(up-compare-goal mem-enemy-archer-peak < 10)
+=>
+	(set-goal mem-enemy-archer-peak 10))
+(defrule
+	(players-unit-type-count any-enemy archer-line >= 15)
+	(up-compare-goal mem-enemy-archer-peak < 15)
+=>
+	(set-goal mem-enemy-archer-peak 15))
+(defrule
+	(players-unit-type-count any-enemy archer-line >= 20)
+	(up-compare-goal mem-enemy-archer-peak < 20)
+=>
+	(set-goal mem-enemy-archer-peak 20))
+
+; Peak scout/cavalry count
+(defrule
+	(players-unit-type-count any-enemy scout-cavalry-line >= 3)
+	(up-compare-goal mem-enemy-cav-peak < 3)
+=>
+	(set-goal mem-enemy-cav-peak 3))
+(defrule
+	(players-unit-type-count any-enemy scout-cavalry-line >= 6)
+	(up-compare-goal mem-enemy-cav-peak < 6)
+=>
+	(set-goal mem-enemy-cav-peak 6))
+(defrule
+	(players-unit-type-count any-enemy scout-cavalry-line >= 10)
+	(up-compare-goal mem-enemy-cav-peak < 10)
+=>
+	(set-goal mem-enemy-cav-peak 10))
+(defrule
+	(players-unit-type-count any-enemy scout-cavalry-line >= 15)
+	(up-compare-goal mem-enemy-cav-peak < 15)
+=>
+	(set-goal mem-enemy-cav-peak 15))
+
+; Peak infantry count
+(defrule
+	(players-unit-type-count any-enemy militiaman-line >= 4)
+	(up-compare-goal mem-enemy-infantry-peak < 4)
+=>
+	(set-goal mem-enemy-infantry-peak 4))
+(defrule
+	(players-unit-type-count any-enemy militiaman-line >= 8)
+	(up-compare-goal mem-enemy-infantry-peak < 8)
+=>
+	(set-goal mem-enemy-infantry-peak 8))
+(defrule
+	(players-unit-type-count any-enemy militiaman-line >= 12)
+	(up-compare-goal mem-enemy-infantry-peak < 12)
+=>
+	(set-goal mem-enemy-infantry-peak 12))
+
+; Aggression score: enemy commits feudal military early
+(defrule
+	(players-current-age any-enemy >= feudal-age)
+	(players-military-population any-enemy >= 8)
+	(game-time < detect-feudal-time-max)
+	(up-compare-goal mem-aggression-score < 10)
+=>
+	(up-modify-goal mem-aggression-score c:+ 1))
+
+; Track sustained raids on our base (feeds rally + heavy defense)
+(defrule
+	(goal underattack yes)
+	(game-time >= mem-last-scout-tick)
+	(up-compare-goal mem-attack-events < 20)
+=>
+	(up-modify-goal mem-attack-events c:+ 1)
+	(up-modify-goal mem-last-scout-tick g:= game-time)
+	(up-modify-goal mem-last-scout-tick c:+ 45))
+
+; Switch to defensive posture after repeated enemy attacks
+(defrule
+	(up-compare-goal mem-attack-events >= 5)
+	(up-compare-goal mem-adapt-mode == adapt-balanced)
+=>
+	(set-goal mem-adapt-mode adapt-defensive)
+	(set-goal mem-rally-army 1))
+
+; Keep counter-adaptation when pressured (rally without wiping counter mode)
+(defrule
+	(up-compare-goal mem-attack-events >= 5)
+(or	(up-compare-goal mem-adapt-mode == adapt-counter-archers)
+(or	(up-compare-goal mem-adapt-mode == adapt-counter-cavalry)
+	(up-compare-goal mem-adapt-mode == adapt-counter-infantry)))
+=>
+	(set-goal mem-rally-army 1))

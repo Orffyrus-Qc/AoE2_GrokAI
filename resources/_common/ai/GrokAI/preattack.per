@@ -1,0 +1,155 @@
+;==============================================================================
+; GrokAI v2.1 - Attack governor: fortify → prep → commit → sustain → recover
+;==============================================================================
+
+; ======================== FORTIFY COMPLETE FLAG ========================
+(defrule
+	(up-compare-goal mem-fortify-ready != 1)
+	(up-compare-goal mem-wall-phase == wall-phase-done)
+	(up-compare-goal mem-stronghold-tc-done g:>= mem-stronghold-tc-count)
+	(building-type-count-total gate >= wall-gate-target)
+	(building-type-count-total stone-wall-line >= wall-complete-stone)
+	(building-type-count-total tower-class >= preattack-towers-min)
+=>
+	(set-goal mem-fortify-ready 1))
+
+(defrule
+	(up-compare-goal mem-fortify-ready != 1)
+	(up-compare-goal mem-wall-phase == wall-phase-done)
+	(building-type-count-total gate >= wall-gate-target)
+(or	(building-type-count palisade-wall >= wall-complete-palisade)
+	(building-type-count-total stone-wall-line >= wall-complete-stone))
+	(building-type-count-total tower-class >= preattack-towers-min)
+=>
+	(set-goal mem-fortify-ready 1))
+
+(defrule
+	(up-compare-goal mem-fortify-ready != 1)
+	(current-age >= castle-age)
+	(up-compare-goal mem-stronghold-tc-done g:>= mem-stronghold-tc-count)
+	(building-type-count-total gate >= mem-stronghold-tc-count)
+	(building-type-count-total tower-class >= preattack-towers-fallback)
+=>
+	(set-goal mem-fortify-ready 1))
+
+(defrule
+	(up-compare-goal mem-fortify-ready != 1)
+	(up-compare-goal mem-wall-phase == wall-phase-done)
+	(building-type-count-total gate >= wall-gate-target)
+	(building-type-count palisade-wall >= wall-complete-palisade)
+	(game-time >= preattack-fortify-timeout)
+	(building-type-count-total tower-class >= preattack-towers-fallback)
+=>
+	(set-goal mem-fortify-ready 1))
+
+; ======================== ARM PREP LOCK (FEUDAL+) ========================
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-attack-sustain != 1)
+	(up-compare-goal mem-attack-lock != 1)
+	(up-compare-goal mem-attack-recover != 1)
+	(up-compare-goal my-mpop g:< allowed-num-military)
+=>
+	(set-goal mem-attack-lock 1)
+	(set-goal mem-rally-army 1))
+
+; ======================== PREP PHASE: CALM (STAGE AT TC) ========================
+(defrule
+	(up-compare-goal mem-attack-lock == 1)
+	(up-compare-goal mem-attack-sustain != 1)
+	(goal underattack no)
+=>
+	(set-goal attacking no)
+	(set-goal mem-rally-army 1)
+	(set-goal attackmethod groups)
+	(set-strategic-number sn-percent-attack-soldiers 0)
+	(set-strategic-number sn-number-attack-groups 1)
+	(set-strategic-number sn-gather-idle-soldiers-at-center 1))
+
+; ======================== PREP PHASE: UNDER ATTACK (LET MILITARY COUNTER) ========================
+(defrule
+	(up-compare-goal mem-attack-lock == 1)
+	(up-compare-goal mem-attack-sustain != 1)
+	(goal underattack yes)
+=>
+	(set-goal attacking no)
+	(set-goal mem-rally-army 1)
+	(set-goal attackmethod groups)
+	(set-strategic-number sn-gather-idle-soldiers-at-center 1))
+
+; ======================== RECOVER PHASE END ========================
+(defrule
+	(up-compare-goal mem-attack-recover == 1)
+	(game-time >= mem-attack-recover-until)
+=>
+	(up-modify-goal temporary-goal g:= allowed-num-military)
+	(up-modify-goal temporary-goal c:* preattack-recover-mpop-num)
+	(up-modify-goal temporary-goal c:/ preattack-recover-mpop-den))
+
+(defrule
+	(up-compare-goal mem-attack-recover == 1)
+	(game-time >= mem-attack-recover-until)
+	(up-compare-goal my-mpop g:>= temporary-goal)
+=>
+	(set-goal mem-attack-recover 0)
+	(set-goal mem-attack-recover-until 0))
+
+; ======================== COMMIT: 90% ARMY + FORTIFY DONE ========================
+(defrule
+	(up-compare-goal mem-attack-lock == 1)
+	(up-compare-goal mem-attack-sustain != 1)
+	(up-compare-goal mem-attack-recover != 1)
+	(up-compare-goal mem-fortify-ready == 1)
+	(current-age >= feudal-age)
+=>
+	(up-modify-goal temporary-goal2 g:= allowed-num-military)
+	(up-modify-goal temporary-goal2 c:* preattack-commit-pct-num)
+	(up-modify-goal temporary-goal2 c:/ preattack-commit-pct-den))
+
+(defrule
+	(up-compare-goal mem-attack-lock == 1)
+	(up-compare-goal mem-attack-sustain != 1)
+	(up-compare-goal mem-attack-recover != 1)
+	(up-compare-goal mem-fortify-ready == 1)
+	(up-compare-goal my-mpop g:>= temporary-goal2)
+	(current-age >= feudal-age)
+=>
+	(set-goal mem-attack-lock 0)
+	(set-goal mem-attack-sustain 1)
+	(up-modify-goal mem-attack-peak g:= my-mpop)
+	(up-modify-goal mem-attack-floor g:= mem-attack-peak)
+	(up-modify-goal mem-attack-floor c:/ preattack-loss-half)
+	(set-goal mem-rally-army 0)
+	(set-goal attacking yes)
+	(set-strategic-number sn-percent-attack-soldiers 100)
+	(set-strategic-number sn-number-attack-groups 1000))
+
+; ======================== SUSTAIN PUSH UNTIL HALF LOSSES ========================
+(defrule
+	(up-compare-goal mem-attack-sustain == 1)
+	(up-compare-goal my-mpop g:> mem-attack-floor)
+=>
+	(set-goal attacking yes)
+	(set-goal mem-rally-army 0)
+	(set-goal attackmethod groups)
+	(set-strategic-number sn-percent-attack-soldiers 100)
+	(set-strategic-number sn-number-attack-groups 1000)
+	(set-strategic-number sn-gather-idle-soldiers-at-center 0))
+
+; ======================== RETREAT TO RECOVER / REBUILD ========================
+(defrule
+	(up-compare-goal mem-attack-sustain == 1)
+	(up-compare-goal my-mpop g:<= mem-attack-floor)
+=>
+	(set-goal mem-attack-sustain 0)
+	(set-goal mem-attack-lock 1)
+	(set-goal mem-attack-recover 1)
+	(up-modify-goal mem-attack-recover-until g:= game-time)
+	(up-modify-goal mem-attack-recover-until c:+ preattack-recover-time)
+	(set-goal attacking no)
+	(set-goal mem-rally-army 1)
+	(set-strategic-number sn-percent-attack-soldiers 0)
+	(set-strategic-number sn-number-attack-groups 1)
+	(set-strategic-number sn-gather-idle-soldiers-at-center 1)
+	(set-goal mem-attack-peak 0)
+	(set-goal mem-attack-floor 0))
