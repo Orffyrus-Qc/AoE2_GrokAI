@@ -6,7 +6,9 @@
 ;==============================================================================
 
 (defrule
-	(true)
+(or	(up-compare-goal mem-stronghold-seg != stronghold-seg-gate-access)
+(and	(up-compare-goal mem-wall-segments != wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments != wall-seg-tc-gate-access)))
 =>
 	(set-goal mem-gate-align gate-align-none)
 	(set-goal mem-gate-stone-align gate-align-none))

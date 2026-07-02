@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v1.4 - Fortify cycle: expand stone compounds every 5 minutes
+; GrokAI v1.5 - Fortify cycle: compounds + attack towers every 5 minutes
 ; Re-arms wall/gate waves, tower placement, and compound maintenance on timer.
 ;==============================================================================
 
@@ -66,7 +66,7 @@
 	(set-goal mem-wall-stuck 0)
 	(set-goal mem-fort-wave 0))
 
-; ======================== CYCLE: TOWERS WAVE ========================
+; ======================== CYCLE: TOWERS WAVE (DEFENSE + ATTACK) ========================
 (defrule
 	(current-age >= feudal-age)
 	(goal inseln no)
@@ -78,7 +78,8 @@
 =>
 	(set-goal mem-tower-def-active 1)
 	(set-goal mem-tower-def-slot 0)
-	(set-goal mem-tower-stuck 0))
+	(set-goal mem-tower-stuck 0)
+	(set-goal mem-build-tower-lock 1))
 
 (defrule
 	(current-age >= castle-age)
@@ -91,7 +92,31 @@
 	(set-goal mem-tower-off-active 1)
 	(set-goal mem-tower-off-slot 0)
 	(set-goal mem-tower-stuck 0)
+	(set-goal mem-build-tower-lock 1)
 	(set-goal trainbombard yes))
+
+(defrule
+	(current-age >= castle-age)
+	(goal inseln no)
+	(game-time < tower-time-max)
+	(game-time >= mem-fortify-next-cycle)
+	(goal attacking yes)
+	(stone-amount >= tower-stone-min)
+	(building-type-count-total bombard-tower < fort-tower-cap)
+=>
+	(set-goal mem-tower-off-active 1)
+	(set-goal mem-tower-off-slot 0)
+	(set-goal mem-tower-stuck 0)
+	(set-goal mem-build-tower-lock 1)
+	(set-goal trainbombard yes))
+
+(defrule
+	(current-age >= feudal-age)
+	(goal inseln no)
+	(game-time >= mem-fortify-next-cycle)
+	(up-compare-goal mem-build-tower-vills g:< build-tower-vills-max)
+=>
+	(up-modify-goal mem-build-tower-vills c:+ 2))
 
 ; ======================== CYCLE: COMPOUND MAINTAIN + CAPS ========================
 (defrule

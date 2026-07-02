@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v0.8 - Strategic defensive + offensive towers
+; GrokAI v1.5 - Strategic defensive + offensive (attack) towers
 ; Defensive: flanks around TC toward the threat vector.
 ; Offensive: forward towers toward enemy base / map control.
 ;==============================================================================
@@ -390,7 +390,7 @@
 =>
 	(set-strategic-number sn-ignore-tower-elevation 1)
 	(up-build-line saved-point-x saved-point-x c: watch-tower-building)
-	(up-assign-builders c: watch-tower c: 3)
+	(up-assign-builders c: watch-tower g: mem-build-tower-vills)
 	(up-modify-goal mem-tower-def-slot c:+ 1)
 	(set-goal mem-tower-stuck 0))
 
@@ -406,7 +406,7 @@
 =>
 	(set-strategic-number sn-ignore-tower-elevation 1)
 	(up-build-line saved-point-x saved-point-x c: bombard-tower)
-	(up-assign-builders c: bombard-tower c: 2)
+	(up-assign-builders c: bombard-tower g: mem-build-tower-vills)
 	(up-modify-goal mem-tower-def-slot c:+ 1)
 	(set-goal mem-tower-stuck 0))
 
@@ -424,7 +424,7 @@
 =>
 	(set-strategic-number sn-ignore-tower-elevation 1)
 	(up-build-line temporary-point-x temporary-point-x c: bombard-tower)
-	(up-assign-builders c: bombard-tower c: 2)
+	(up-assign-builders c: bombard-tower g: mem-build-tower-vills)
 	(up-modify-goal mem-tower-off-slot c:+ 1)
 	(set-goal mem-tower-stuck 0))
 

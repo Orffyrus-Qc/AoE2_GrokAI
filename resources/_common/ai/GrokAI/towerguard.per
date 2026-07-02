@@ -1,0 +1,212 @@
+;==============================================================================
+; GrokAI v1.5 - Tower builder lock: attack/defense towers finish before retask
+; Mirrors buildguard; dedicated corps build and repair every 5-min cycle wave.
+;==============================================================================
+
+; ======================== DETECT ACTIVE TOWER BUILD/REPAIR ========================
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-tower-def-active == 1)
+=>
+	(set-goal mem-build-tower-lock 1))
+
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-tower-off-active == 1)
+=>
+	(set-goal mem-build-tower-lock 1))
+
+(defrule
+	(current-age >= feudal-age)
+	(up-pending-objects c: watch-tower >= 1)
+=>
+	(set-goal mem-build-tower-lock 1))
+
+(defrule
+	(current-age >= feudal-age)
+	(up-pending-objects c: guard-tower >= 1)
+=>
+	(set-goal mem-build-tower-lock 1))
+
+(defrule
+	(current-age >= feudal-age)
+	(up-pending-objects c: bombard-tower >= 1)
+=>
+	(set-goal mem-build-tower-lock 1))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-compare-goal mem-tower-def-active != 1)
+	(up-compare-goal mem-tower-off-active != 1)
+	(up-pending-objects c: watch-tower < 1)
+	(up-pending-objects c: guard-tower < 1)
+	(up-pending-objects c: bombard-tower < 1)
+=>
+	(set-goal mem-build-tower-lock 0))
+
+; ======================== SHIELD GROUP 19 DURING TOWER LOCK ========================
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-group-size c: build-workers-group > 0)
+=>
+	(up-modify-group-flag 1 c: build-workers-group))
+
+; ======================== RE-ASSIGN TOWER BUILDERS ========================
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-pending-objects c: watch-tower >= 1)
+	(up-compare-goal mem-build-tower-vills >= 2)
+=>
+	(up-assign-builders c: watch-tower g: mem-build-tower-vills))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-pending-objects c: guard-tower >= 1)
+	(up-compare-goal mem-build-tower-vills >= 2)
+=>
+	(up-assign-builders c: guard-tower g: mem-build-tower-vills))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-pending-objects c: bombard-tower >= 1)
+	(up-compare-goal mem-build-tower-vills >= 2)
+=>
+	(up-assign-builders c: bombard-tower g: mem-build-tower-vills))
+
+; ======================== RECLAIM CORPS PULLED OFF TOWER BUILD ========================
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-group-size c: build-workers-group > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: villager g: mem-build-pool-size)
+	(up-remove-objects search-local object-data-group-flag c:!= build-workers-group)
+	(up-remove-objects search-local object-data-order == orderid-build)
+	(up-get-search-state local-total))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-pending-objects c: bombard-tower >= 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-group search-local c: build-workers-group)
+	(up-modify-group-flag 1 c: build-workers-group)
+	(up-full-reset-search)
+	(up-find-local c: bombard-tower c: 16)
+	(up-find-local c: guard-tower c: 12)
+	(up-find-local c: watch-tower c: 16)
+	(up-set-target-object search-local c: 0)
+	(up-target-objects 0 action-default -1 -1))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-pending-objects c: bombard-tower < 1)
+	(up-pending-objects c: guard-tower >= 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-group search-local c: build-workers-group)
+	(up-modify-group-flag 1 c: build-workers-group)
+	(up-full-reset-search)
+	(up-find-local c: guard-tower c: 24)
+	(up-find-local c: watch-tower c: 16)
+	(up-set-target-object search-local c: 0)
+	(up-target-objects 0 action-default -1 -1))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-pending-objects c: bombard-tower < 1)
+	(up-pending-objects c: guard-tower < 1)
+	(up-pending-objects c: watch-tower >= 1)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-group search-local c: build-workers-group)
+	(up-modify-group-flag 1 c: build-workers-group)
+	(up-full-reset-search)
+	(up-find-local c: watch-tower c: 32)
+	(up-set-target-object search-local c: 0)
+	(up-target-objects 0 action-default -1 -1))
+
+; ======================== REPAIR DAMAGED ATTACK/DEFENSE TOWERS ========================
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-group-size c: build-workers-group > 0)
+	(building-type-count town-center >= 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object saved-point-x)
+	(up-set-target-point saved-point-x)
+	(up-find-local c: tower-class c: 24)
+	(up-filter-distance c: -1 c: tower-repair-radius)
+	(up-remove-objects search-local object-data-hitpoints g:>= tower-bombard-hp-full)
+	(up-get-search-state local-total))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-get-object-data object-data-id temporary-goal)
+	(up-set-group search-local c: build-workers-group)
+	(up-full-reset-search)
+	(up-add-object-by-id search-remote g: temporary-goal)
+	(up-remove-objects search-local object-data-order == orderid-repair)
+	(up-target-objects 0 action-default -1 -1))
+
+; Forward attack towers: repair near offensive placement vector
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-compare-goal mem-tower-off-active == 1)
+	(up-group-size c: build-workers-group > 0)
+=>
+	(up-copy-point saved-point-x position-self-x)
+	(up-lerp-percent saved-point-x enemy-x c: tower-off-lerp-main)
+	(up-full-reset-search)
+	(up-set-target-point saved-point-x)
+	(up-find-local c: tower-class c: 16)
+	(up-filter-distance c: -1 c: tower-repair-radius)
+	(up-remove-objects search-local object-data-hitpoints g:>= tower-bombard-hp-full)
+	(up-get-search-state local-total))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-compare-goal mem-tower-off-active == 1)
+	(up-compare-goal local-total > 0)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-get-object-data object-data-id temporary-goal)
+	(up-set-group search-local c: build-workers-group)
+	(up-full-reset-search)
+	(up-add-object-by-id search-remote g: temporary-goal)
+	(up-remove-objects search-local object-data-order == orderid-repair)
+	(up-target-objects 0 action-default -1 -1))
+
+; ======================== INCREMENTAL CORPS FILL (NO RESET MID-LOCK) ========================
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(current-age >= feudal-age)
+	(up-group-size c: build-workers-group < mem-build-pool-size)
+	(up-compare-goal villagercount >= eco-fortify-vills-min)
+=>
+	(up-full-reset-search)
+	(up-find-local c: villager c: 1)
+	(up-remove-objects search-local object-data-group-flag c:== build-workers-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-food-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-patrol-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-escort-group)
+	(up-remove-objects search-local object-data-group-flag c:== raid-builder-group)
+	(up-remove-objects search-local object-data-group-flag c:== explore-army-group)
+	(up-remove-objects search-local object-data-order == orderid-build)
+	(up-get-search-state local-total))
+
+(defrule
+	(up-compare-goal mem-build-tower-lock == 1)
+	(up-compare-goal local-total > 0)
+	(up-set-target-object search-local c: 0)
+=>
+	(up-set-group search-local c: build-workers-group)
+	(up-modify-group-flag 1 c: build-workers-group))

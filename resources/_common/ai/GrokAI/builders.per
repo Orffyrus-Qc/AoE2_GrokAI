@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v1.3 - Build corps prioritizes walls, gates, and towers
+; GrokAI v1.5 - Build corps: walls, gates, attack towers (group 19)
 ; Exclusive villagers for walls, gates, towers, TCs, castles, maintain/rebuild.
 ;==============================================================================
 
@@ -177,7 +177,8 @@
 	(up-compare-goal mem-fortify-ready != 1)
 (or	(up-compare-goal mem-wall-active == 1)
 (or	(up-compare-goal mem-stronghold-active == 1)
-	(up-compare-goal mem-tower-def-active == 1)))
+(or	(up-compare-goal mem-tower-def-active == 1)
+	(up-compare-goal mem-tower-off-active == 1))))
 	(up-compare-goal mem-build-tower-vills g:< build-tower-vills-max)
 =>
 	(up-modify-goal mem-build-tower-vills c:+ 2))
@@ -195,10 +196,11 @@
 	(up-modify-goal mem-build-raid-vills g:= raid-builder-vills))
 
 ; ======================== DEDICATED BUILD CORPS (GROUP 19) ========================
-; Full refresh only when wall/gate lock is off (buildguard handles locked recruits)
+; Full refresh only when wall/gate/tower locks are off (buildguard/towerguard handle locked recruits)
 (defrule
 	(current-age >= feudal-age)
-	(up-compare-goal mem-build-wall-gate-lock == 1)
+(or	(up-compare-goal mem-build-wall-gate-lock == 1)
+	(up-compare-goal mem-build-tower-lock == 1))
 	(up-group-size c: build-workers-group > 0)
 =>
 	(up-modify-group-flag 1 c: build-workers-group))
@@ -208,6 +210,7 @@
 	(up-group-size c: build-workers-group < mem-build-pool-size)
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
 	(up-compare-goal mem-build-wall-gate-lock != 1)
+	(up-compare-goal mem-build-tower-lock != 1)
 =>
 	(up-modify-group-flag 0 c: build-workers-group)
 	(up-reset-group c: build-workers-group)
@@ -234,6 +237,7 @@
 	(up-set-target-point saved-point-x)
 	(up-find-local c: wall-class c: 32)
 	(up-find-local c: gate-class c: 16)
+	(up-find-local c: tower-class c: 12)
 	(up-filter-distance c: -1 c: stronghold-repair-radius)
 	(up-remove-objects search-local object-data-hitpoints g:>= stronghold-wall-hp-full)
 	(up-get-search-state local-total))
@@ -362,8 +366,28 @@
 	(up-assign-builders c: watch-tower c: 4))
 
 (defrule
+	(up-pending-objects c: guard-tower >= 1)
+	(up-compare-goal mem-build-tower-vills >= 4)
+=>
+	(up-assign-builders c: guard-tower c: 4))
+
+(defrule
+	(up-pending-objects c: guard-tower >= 1)
+	(up-compare-goal mem-build-tower-vills >= 2)
+	(up-compare-goal mem-build-tower-vills < 4)
+=>
+	(up-assign-builders c: guard-tower c: 2))
+
+(defrule
+	(up-pending-objects c: bombard-tower >= 1)
+	(up-compare-goal mem-build-tower-vills >= 6)
+=>
+	(up-assign-builders c: bombard-tower g: mem-build-tower-vills))
+
+(defrule
 	(up-pending-objects c: bombard-tower >= 1)
 	(up-compare-goal mem-build-tower-vills >= 4)
+	(up-compare-goal mem-build-tower-vills < 6)
 =>
 	(up-assign-builders c: bombard-tower c: 4))
 
