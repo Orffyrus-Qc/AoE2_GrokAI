@@ -13,6 +13,7 @@
 | **Builders** | Dedicated build corps (group 19) for walls, gates, towers, TCs, castles |
 | **Towers** | Defensive towers on TC flanks and resource sites |
 | **Fortify** | Progressive stone walls, extended chokes, castle-age guard towers |
+| **Cycle** | Every **5 minutes**: new walls, gates, towers, compound repair |
 | **Military** | Unified attack blobs, population-scaled waves, siege escorts |
 | **Age** | Fast feudal → castle → imperial with food-heavy eco while aging |
 
