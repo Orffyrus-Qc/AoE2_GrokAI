@@ -1,0 +1,86 @@
+;==============================================================================
+; GrokAI v2.0 - Stone build queue: hold wall/gate/tower/struct until stone arrives
+;==============================================================================
+
+; ======================== QUEUE WALLS/GATES (STONE TIER) ========================
+(defrule
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-stronghold-active == 1)
+(or	(up-compare-goal mem-wall-active == 1)
+	(up-compare-goal mem-stronghold-tc-done g:< mem-stronghold-tc-count)))
+=>
+	(set-goal mem-stone-queue-active 1)
+	(set-goal mem-build-queue-wall 1))
+
+(defrule
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(stone-amount < fort-stone-min)
+	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+=>
+	(set-goal mem-stone-queue-active 1)
+	(set-goal mem-build-queue-gate 1))
+
+; ======================== QUEUE TOWERS ========================
+(defrule
+	(current-age >= castle-age)
+	(stone-amount < tower-stone-min)
+(or	(up-compare-goal mem-tower-def-active == 1)
+(or	(up-compare-goal mem-tower-off-active == 1)
+	(building-type-count-total tower-class g:< mem-build-tower-target)))
+=>
+	(set-goal mem-stone-queue-active 1)
+	(set-goal mem-build-queue-tower 1))
+
+; ======================== QUEUE TC/CASTLE STONE STRUCTURES ========================
+(defrule
+	(stone-amount < fort-stone-min)
+(or	(up-pending-objects c: town-center >= 1)
+(or	(up-pending-objects c: castle >= 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-castle)))
+=>
+	(set-goal mem-stone-queue-active 1)
+	(set-goal mem-build-queue-struct 1))
+
+; ======================== CLEAR QUEUE WHEN STONE ARRIVES ========================
+(defrule
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-build-queue-wall == 1)
+=>
+	(set-goal mem-build-queue-wall 0))
+
+(defrule
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-build-queue-gate == 1)
+=>
+	(set-goal mem-build-queue-gate 0))
+
+(defrule
+	(stone-amount >= tower-stone-min)
+	(up-compare-goal mem-build-queue-tower == 1)
+=>
+	(set-goal mem-build-queue-tower 0))
+
+(defrule
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-build-queue-struct == 1)
+=>
+	(set-goal mem-build-queue-struct 0))
+
+(defrule
+	(up-compare-goal mem-build-queue-wall != 1)
+	(up-compare-goal mem-build-queue-gate != 1)
+	(up-compare-goal mem-build-queue-tower != 1)
+	(up-compare-goal mem-build-queue-struct != 1)
+=>
+	(set-goal mem-stone-queue-active 0))
+
+; ======================== BOOST STONE GATHER WHILE QUEUED ========================
+(defrule
+	(current-age >= feudal-age)
+	(up-compare-goal mem-stone-queue-active == 1)
+	(strategic-number sn-stone-gatherer-percentage < eco-stone-stronghold-pct)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-stronghold-pct)
+	(set-strategic-number sn-food-gatherer-percentage 52)
+	(set-strategic-number sn-wood-gatherer-percentage 22))

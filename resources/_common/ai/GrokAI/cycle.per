@@ -78,9 +78,8 @@
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
 	(wood-amount >= tower-wood-min)
 	(building-type-count-total tower-class < fort-tower-cap)
-	(building-type-count-total tower-class g:< mem-build-gate-now)
-	(up-compare-goal mem-build-gate-now g:>= fort-ratio-gates-tier1)
-	(up-compare-goal mem-build-wall-now g:>= fort-ratio-walls-tier1)
+	(building-type-count-total tower-class g:< mem-build-tower-target)
+	(up-compare-goal mem-build-structure-count g:>= tower-per-buildings)
 =>
 	(set-goal mem-tower-def-active 1)
 	(set-goal mem-tower-def-slot 0)

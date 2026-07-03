@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v1.5 - Build corps: walls, gates, attack towers (group 19)
+; GrokAI v2.0 - Build corps: walls, gates, attack towers (group 19)
 ; Exclusive villagers for walls, gates, towers, TCs, castles, maintain/rebuild.
 ;==============================================================================
 
@@ -19,6 +19,146 @@
 	(up-find-local c: wall-class c: 120)
 	(up-get-search-state local-total)
 	(up-modify-goal mem-build-wall-now g:= local-total))
+
+(defrule
+	(true)
+=>
+	(up-full-reset-search)
+	(up-find-local c: building-class c: 256)
+	(up-get-search-state local-total)
+	(up-modify-goal mem-build-structure-count g:= local-total)
+	(up-modify-goal mem-build-structure-count g:- mem-build-wall-now)
+	(up-modify-goal mem-build-structure-count g:- mem-build-gate-now))
+
+; ======================== TOWER TARGET: 1 PER 10 STRUCTURES ========================
+(defrule
+	(up-compare-goal mem-build-structure-count >= 200)
+=>
+	(set-goal mem-build-tower-target 20))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 190)
+	(up-compare-goal mem-build-structure-count < 200)
+=>
+	(set-goal mem-build-tower-target 19))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 180)
+	(up-compare-goal mem-build-structure-count < 190)
+=>
+	(set-goal mem-build-tower-target 18))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 170)
+	(up-compare-goal mem-build-structure-count < 180)
+=>
+	(set-goal mem-build-tower-target 17))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 160)
+	(up-compare-goal mem-build-structure-count < 170)
+=>
+	(set-goal mem-build-tower-target 16))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 150)
+	(up-compare-goal mem-build-structure-count < 160)
+=>
+	(set-goal mem-build-tower-target 15))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 140)
+	(up-compare-goal mem-build-structure-count < 150)
+=>
+	(set-goal mem-build-tower-target 14))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 130)
+	(up-compare-goal mem-build-structure-count < 140)
+=>
+	(set-goal mem-build-tower-target 13))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 120)
+	(up-compare-goal mem-build-structure-count < 130)
+=>
+	(set-goal mem-build-tower-target 12))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 110)
+	(up-compare-goal mem-build-structure-count < 120)
+=>
+	(set-goal mem-build-tower-target 11))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 100)
+	(up-compare-goal mem-build-structure-count < 110)
+=>
+	(set-goal mem-build-tower-target 10))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 90)
+	(up-compare-goal mem-build-structure-count < 100)
+=>
+	(set-goal mem-build-tower-target 9))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 80)
+	(up-compare-goal mem-build-structure-count < 90)
+=>
+	(set-goal mem-build-tower-target 8))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 70)
+	(up-compare-goal mem-build-structure-count < 80)
+=>
+	(set-goal mem-build-tower-target 7))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 60)
+	(up-compare-goal mem-build-structure-count < 70)
+=>
+	(set-goal mem-build-tower-target 6))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 50)
+	(up-compare-goal mem-build-structure-count < 60)
+=>
+	(set-goal mem-build-tower-target 5))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 40)
+	(up-compare-goal mem-build-structure-count < 50)
+=>
+	(set-goal mem-build-tower-target 4))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 30)
+	(up-compare-goal mem-build-structure-count < 40)
+=>
+	(set-goal mem-build-tower-target 3))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 20)
+	(up-compare-goal mem-build-structure-count < 30)
+=>
+	(set-goal mem-build-tower-target 2))
+
+(defrule
+	(up-compare-goal mem-build-structure-count >= 10)
+	(up-compare-goal mem-build-structure-count < 20)
+=>
+	(set-goal mem-build-tower-target 1))
+
+(defrule
+	(up-compare-goal mem-build-structure-count < 10)
+=>
+	(set-goal mem-build-tower-target 0))
+
+(defrule
+	(up-compare-goal mem-build-tower-target g:> fort-tower-cap)
+=>
+	(set-goal mem-build-tower-target fort-tower-cap))
 
 ; ======================== RAMP CAPS + POOL OVER TIME ========================
 (defrule
@@ -455,9 +595,8 @@
 	(up-compare-goal mem-tower-def-active != 1)
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
 	(wood-amount >= tower-wood-min)
-	(building-type-count-total tower-class g:< mem-build-gate-now)
-	(up-compare-goal mem-build-gate-now g:>= fort-ratio-gates-tier1)
-	(up-compare-goal mem-build-wall-now g:>= fort-ratio-walls-tier1)
+	(building-type-count-total tower-class g:< mem-build-tower-target)
+	(up-compare-goal mem-build-structure-count g:>= tower-per-buildings)
 =>
 	(set-goal mem-tower-def-active 1)
 	(set-goal mem-tower-def-slot 0)

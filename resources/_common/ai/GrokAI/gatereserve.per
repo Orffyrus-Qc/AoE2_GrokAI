@@ -1,0 +1,84 @@
+;==============================================================================
+; GrokAI v2.0 - Gate emplacement memory: reserve one tile around each gate
+; Blocks economy + tower placement on gate tiles and their approach clearance.
+;==============================================================================
+
+; ======================== SNAPSHOT GATE CLEARANCE (inside approach tile) ========================
+(defrule
+	(building-type-count-total gate >= 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: gate-class c: 32)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object saved-point-x)
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object point2-x)
+	(up-copy-point temporary-point-x saved-point-x)
+	(up-lerp-tiles temporary-point-x point2-x c: 1))
+
+; ======================== BLOCK ECONOMY BUILDINGS ON GATE + CLEARANCE ========================
+(defrule
+	(building-type-count town-center >= 1)
+	(building-type-count-total gate >= 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: gate-class c: 32)
+	(up-filter-distance last-building c: -1 c: gate-reserve-radius)
+	(up-get-search-state local-total))
+
+(defrule
+	(building-type-count town-center >= 1)
+	(building-type-count-total gate >= 1)
+	(up-compare-goal local-total > 0)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object last-building))
+
+(defrule
+	(building-type-count town-center >= 1)
+	(building-type-count-total gate >= 1)
+	(up-point-distance last-building temporary-point-x <= gate-reserve-radius)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object last-building))
+
+; ======================== BLOCK TOWERS ON GATE EMPLACEMENTS ========================
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(building-type-count-total gate >= 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: gate-class c: 32)
+	(up-filter-distance saved-point-x c: -1 c: gate-reserve-radius)
+	(up-get-search-state local-total))
+
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(up-compare-goal local-total > 0)
+	(up-compare-goal mem-tower-stuck < tower-stuck-max)
+=>
+	(up-modify-goal mem-tower-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x position-self-x c: 1))
+
+(defrule
+	(up-compare-goal mem-tower-off-active == 1)
+	(building-type-count-total gate >= 1)
+=>
+	(up-full-reset-search)
+	(up-find-local c: gate-class c: 32)
+	(up-filter-distance temporary-point-x c: -1 c: gate-reserve-radius)
+	(up-get-search-state local-total))
+
+(defrule
+	(up-compare-goal mem-tower-off-active == 1)
+	(up-compare-goal local-total > 0)
+	(up-compare-goal mem-tower-stuck < tower-stuck-max)
+=>
+	(up-modify-goal mem-tower-stuck c:+ 1)
+	(up-lerp-tiles temporary-point-x position-self-x c: 1))

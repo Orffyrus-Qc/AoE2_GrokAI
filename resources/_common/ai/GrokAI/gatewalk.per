@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v1.9.1 - Gate walkability: both sides of gate tile must be clear
+; GrokAI v2.0 - Gate walkability: both sides clear + enclosed area >= 25 tiles
 ; Probes inside (toward compound center) and outside (away) before gate build.
 ; PER conditions only before =>; point checks cannot live in action blocks.
 ;==============================================================================
@@ -85,6 +85,8 @@
 	(not (up-point-contains temporary-point-x c: tree-class))
 	(not (up-point-contains temporary-point-x c: wall-class))
 	(not (up-point-contains temporary-point-x c: gate-class))
+	(up-point-distance point4-x point-x g:>= compound-min-side-tiles)
+	(up-point-distance point-x point2-x g:>= compound-min-side-tiles)
 =>
 	(set-goal mem-gate-walk-ok 1)
 	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
@@ -153,6 +155,8 @@
 	(not (up-point-contains temporary-point-x c: tree-class))
 	(not (up-point-contains temporary-point-x c: wall-class))
 	(not (up-point-contains temporary-point-x c: gate-class))
+	(up-point-distance point4-x point-x g:>= compound-min-side-tiles)
+	(up-point-distance point-x point2-x g:>= compound-min-side-tiles)
 =>
 	(set-goal mem-gate-walk-ok 1)
 	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
@@ -221,6 +225,8 @@
 	(not (up-point-contains temporary-point-x c: tree-class))
 	(not (up-point-contains temporary-point-x c: wall-class))
 	(not (up-point-contains temporary-point-x c: gate-class))
+	(up-point-distance point4-x point-x g:>= compound-min-side-tiles)
+	(up-point-distance point-x point2-x g:>= compound-min-side-tiles)
 =>
 	(set-goal mem-gate-walk-ok 1)
 	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
@@ -289,6 +295,8 @@
 	(not (up-point-contains temporary-point-x c: tree-class))
 	(not (up-point-contains temporary-point-x c: wall-class))
 	(not (up-point-contains temporary-point-x c: gate-class))
+	(up-point-distance point4-x point-x g:>= compound-min-side-tiles)
+	(up-point-distance point-x point2-x g:>= compound-min-side-tiles)
 =>
 	(set-goal mem-gate-walk-ok 1)
 	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
