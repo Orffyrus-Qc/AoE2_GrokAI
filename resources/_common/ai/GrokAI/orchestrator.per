@@ -96,7 +96,21 @@
 (or	(up-compare-goal mem-aggression-score >= wall-trigger-aggression)
 	(up-compare-goal mem-detected-opening != opening-unknown)))
 =>
-	(set-goal mem-wall-active 1)
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(up-compare-goal mem-orchestrator-arm == 1)
+	(current-age >= feudal-age)
+	(up-compare-goal mem-stronghold-tc-done g:>= mem-stronghold-tc-count)
+	(up-compare-goal mem-tower-def-active != 1)
+	(wood-amount >= tower-wood-min)
+	(building-type-count-total tower-class g:< mem-build-gate-now)
+	(up-compare-goal mem-build-gate-now g:>= fort-ratio-gates-tier1)
+	(up-compare-goal mem-build-wall-now g:>= fort-ratio-walls-tier1)
+(or	(goal underattack yes)
+(or	(up-compare-goal mem-aggression-score >= wall-trigger-aggression)
+	(up-compare-goal mem-detected-opening != opening-unknown)))
+=>
 	(set-goal mem-tower-def-active 1)
 	(set-goal mem-tower-def-slot 0))
 

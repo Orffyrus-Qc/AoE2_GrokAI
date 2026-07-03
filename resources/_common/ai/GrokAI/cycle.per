@@ -69,7 +69,7 @@
 	(set-goal mem-wall-stuck 0)
 	(set-goal mem-fort-wave 0))
 
-; ======================== CYCLE: TOWERS WAVE (DEFENSE + ATTACK) ========================
+; ======================== CYCLE: TOWERS WAVE (ratio: after walls+gates) ========================
 (defrule
 	(current-age >= feudal-age)
 	(goal inseln no)
@@ -78,6 +78,9 @@
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
 	(wood-amount >= tower-wood-min)
 	(building-type-count-total tower-class < fort-tower-cap)
+	(building-type-count-total tower-class g:< mem-build-gate-now)
+	(up-compare-goal mem-build-gate-now g:>= fort-ratio-gates-tier1)
+	(up-compare-goal mem-build-wall-now g:>= fort-ratio-walls-tier1)
 =>
 	(set-goal mem-tower-def-active 1)
 	(set-goal mem-tower-def-slot 0)

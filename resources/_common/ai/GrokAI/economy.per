@@ -1,6 +1,6 @@
 ;==============================================================================
-; GrokAI v1.7 - Economy: food-first, lean vills, army-favored pop
-; Caps villagers early; limits stone/wood drain from fortify.
+; GrokAI v1.8 - Economy: food-first, early feudal stone, army-favored pop
+; Caps villagers early; stone rush at feudal for compounds.
 ;==============================================================================
 
 ; Keep training villagers through feudal/castle boom
@@ -49,6 +49,42 @@
 =>
 	(set-strategic-number sn-gold-gatherer-percentage 5)
 	(set-strategic-number sn-stone-gatherer-percentage 3))
+
+; Feudal: early stone stockpile for TC compounds (before castle)
+(defrule
+	(current-age >= feudal-age)
+	(current-age < castle-age)
+	(stone-amount < fort-stone-min)
+	(strategic-number sn-stone-gatherer-percentage < eco-stone-feudal-pct)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-feudal-pct)
+	(set-strategic-number sn-food-gatherer-percentage 56)
+	(set-strategic-number sn-wood-gatherer-percentage 22)
+	(set-strategic-number sn-gold-gatherer-percentage 3))
+
+; Feudal+: stone rush when compounds or stone walls are queued
+(defrule
+	(current-age >= feudal-age)
+	(stone-amount < fort-stone-min)
+(or	(up-compare-goal mem-stronghold-active == 1)
+(or	(up-compare-goal mem-stronghold-tc-done g:< mem-stronghold-tc-count)
+(or	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+(or	(up-pending-objects c: stone-wall >= 1)
+	(up-pending-objects c: stone-gate1 >= 1)))))
+	(strategic-number sn-stone-gatherer-percentage < eco-stone-stronghold-pct)
+=>
+	(set-strategic-number sn-stone-gatherer-percentage eco-stone-stronghold-pct)
+	(set-strategic-number sn-gold-gatherer-percentage 6))
+
+; Early mining camp for stone
+(defrule
+	(current-age >= feudal-age)
+	(stone-amount < fort-stone-min)
+	(building-type-count mining-camp < 1)
+	(can-build-with-escrow mining-camp)
+	(wood-amount >= eco-stone-mine-wood-min)
+=>
+	(build mining-camp))
 
 ; Castle: cap stone/gold until food stockpile is healthy
 (defrule
@@ -146,39 +182,14 @@
 =>
 	(set-strategic-number sn-stone-gatherer-percentage eco-stone-rush-pct))
 
-; Stone rush: TC/castle stronghold compounds and stone wall tiers
 (defrule
 	(current-age >= castle-age)
 	(stone-amount < fort-stone-min)
-(or	(up-compare-goal mem-stronghold-active == 1)
-(or	(up-compare-goal mem-stronghold-tc-done g:< mem-stronghold-tc-count)
-	(up-compare-goal mem-compound-stone-pass g:< mem-stronghold-tc-count)))
+	(up-compare-goal mem-compound-stone-pass g:< mem-stronghold-tc-count)
 	(strategic-number sn-stone-gatherer-percentage < eco-stone-stronghold-pct)
 =>
 	(set-strategic-number sn-stone-gatherer-percentage eco-stone-stronghold-pct)
 	(set-strategic-number sn-gold-gatherer-percentage 8))
-
-(defrule
-	(current-age >= castle-age)
-	(stone-amount < fort-stone-min)
-(or	(up-compare-goal mem-wall-tier >= wall-tier-stone)
-(or	(up-pending-objects c: stone-wall >= 1)
-	(up-pending-objects c: stone-gate1 >= 1)))
-	(strategic-number sn-stone-gatherer-percentage < eco-stone-stronghold-pct)
-=>
-	(set-strategic-number sn-stone-gatherer-percentage eco-stone-stronghold-pct)
-	(set-strategic-number sn-gold-gatherer-percentage 8))
-
-(defrule
-	(current-age >= feudal-age)
-	(stone-amount < fort-stone-min)
-(or	(up-compare-goal mem-stronghold-active == 1)
-	(up-compare-goal mem-wall-tier >= wall-tier-stone))
-	(building-type-count mining-camp < 1)
-	(can-build-with-escrow mining-camp)
-	(wood-amount >= eco-stone-mine-wood-min)
-=>
-	(build mining-camp))
 
 (defrule
 	(current-age >= castle-age)

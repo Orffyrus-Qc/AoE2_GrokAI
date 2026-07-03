@@ -1,0 +1,101 @@
+;==============================================================================
+; GrokAI v1.8 - Wall/gate vs tower ratio (walls+gates lead, towers follow)
+; 1 tower per gate once enough wall segments exist; blocks tower spam.
+;==============================================================================
+
+; ======================== SUPPRESS TOWERS UNTIL FIRST GATE + WALL CHUNK ========================
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(up-compare-goal mem-build-gate-now g:< fort-ratio-gates-tier1)
+=>
+	(set-goal mem-tower-def-active 0))
+
+(defrule
+	(up-compare-goal mem-tower-off-active == 1)
+	(up-compare-goal mem-build-gate-now g:< fort-ratio-gates-tier1)
+=>
+	(set-goal mem-tower-off-active 0))
+
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(building-type-count-total tower-class < 1)
+	(up-compare-goal mem-build-wall-now g:< fort-ratio-walls-tier1)
+=>
+	(set-goal mem-tower-def-active 0))
+
+; ======================== CAP TOWERS AT GATE COUNT (1:1 gate ratio) ========================
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(building-type-count-total tower-class g:>= mem-build-gate-now)
+	(up-compare-goal mem-build-gate-now g:>= 1)
+=>
+	(set-goal mem-tower-def-active 0))
+
+(defrule
+	(up-compare-goal mem-tower-off-active == 1)
+	(building-type-count-total tower-class g:>= mem-build-gate-now)
+	(up-compare-goal mem-build-gate-now g:>= 1)
+=>
+	(set-goal mem-tower-off-active 0))
+
+; ======================== WALL CHUNK PER EXTRA TOWER TIER ========================
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(building-type-count-total tower-class >= 1)
+	(building-type-count-total tower-class < 2)
+	(up-compare-goal mem-build-wall-now g:< fort-ratio-walls-tier2)
+=>
+	(set-goal mem-tower-def-active 0))
+
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(building-type-count-total tower-class >= 2)
+	(building-type-count-total tower-class < 3)
+	(up-compare-goal mem-build-wall-now g:< fort-ratio-walls-tier3)
+=>
+	(set-goal mem-tower-def-active 0))
+
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(building-type-count-total tower-class >= 3)
+	(building-type-count-total tower-class < 4)
+	(up-compare-goal mem-build-wall-now g:< fort-ratio-walls-tier4)
+=>
+	(set-goal mem-tower-def-active 0))
+
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(building-type-count-total tower-class >= 4)
+	(building-type-count-total tower-class < 5)
+	(up-compare-goal mem-build-wall-now g:< fort-ratio-walls-tier5)
+=>
+	(set-goal mem-tower-def-active 0))
+
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(building-type-count-total tower-class >= 5)
+	(up-compare-goal mem-build-wall-now g:< fort-ratio-walls-tier6)
+=>
+	(set-goal mem-tower-def-active 0))
+
+; ======================== PRIORITIZE WALLS/GATES WHEN TOWERS AHEAD OF RATIO ========================
+(defrule
+	(goal inseln no)
+	(current-age >= feudal-age)
+	(up-compare-goal mem-stronghold-active != 1)
+	(building-type-count-total tower-class g:>= mem-build-gate-now)
+	(up-compare-goal mem-build-gate-now g:< mem-build-gate-cap)
+(or	(and	(stone-amount >= fort-stone-min)
+		(up-compare-goal mem-stronghold-tc-done g:< mem-stronghold-tc-count))
+(or	(up-compare-goal mem-wall-active != 1)
+	(up-compare-goal mem-wall-phase == wall-phase-done)))
+(or	(wood-amount >= wall-segment-wood)
+	(stone-amount >= fort-stone-min))
+=>
+	(set-goal mem-wall-tier wall-tier-stone)
+	(set-goal mem-stronghold-active 1)
+	(set-goal mem-stronghold-mode stronghold-mode-tc)
+	(up-modify-goal mem-stronghold-index g:= mem-stronghold-tc-done)
+	(set-goal mem-stronghold-seg stronghold-seg-setup)
+	(set-goal mem-stronghold-gate-type wall-gate-type0)
+	(set-goal mem-wall-stuck 0))

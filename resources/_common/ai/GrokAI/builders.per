@@ -445,7 +445,7 @@
 	(set-goal mem-wall-segments wall-choke-seg-gate)
 	(set-goal mem-wall-stuck 0))
 
-; ======================== MORE TOWERS WHILE POOL GROWS ========================
+; ======================== MORE TOWERS WHILE POOL GROWS (ratio gated) ========================
 (defrule
 	(goal inseln no)
 	(current-age >= feudal-age)
@@ -455,6 +455,9 @@
 	(up-compare-goal mem-tower-def-active != 1)
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
 	(wood-amount >= tower-wood-min)
+	(building-type-count-total tower-class g:< mem-build-gate-now)
+	(up-compare-goal mem-build-gate-now g:>= fort-ratio-gates-tier1)
+	(up-compare-goal mem-build-wall-now g:>= fort-ratio-walls-tier1)
 =>
 	(set-goal mem-tower-def-active 1)
 	(set-goal mem-tower-def-slot 0)

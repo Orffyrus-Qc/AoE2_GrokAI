@@ -89,7 +89,7 @@
 =>
 	(set-goal mem-raid-pick 0))
 
-; ======================== PRIORITY: WALLS + TOWERS (AFTER ALL TC COMPOUNDS) ========================
+; ======================== PRIORITY: WALLS/GATES THEN TOWERS (RATIO) ========================
 (defrule
 	(goal inseln no)
 	(current-age >= feudal-age)
@@ -98,10 +98,25 @@
 	(up-compare-goal mem-stronghold-tc-done g:>= mem-stronghold-tc-count)
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
 	(wood-amount >= wall-segment-wood)
-(or	(up-compare-goal mem-wall-active != 1)
-	(up-compare-goal mem-tower-def-active != 1))
+	(up-compare-goal mem-wall-active != 1)
+(or	(building-type-count-total tower-class g:>= mem-build-gate-now)
+	(up-compare-goal mem-build-gate-now g:< fort-ratio-gates-tier1))
 =>
-	(set-goal mem-wall-active 1)
+	(set-goal mem-wall-active 1))
+
+(defrule
+	(goal inseln no)
+	(current-age >= feudal-age)
+	(up-compare-goal mem-fortify-ready != 1)
+	(up-compare-goal mem-attack-sustain != 1)
+	(up-compare-goal mem-stronghold-tc-done g:>= mem-stronghold-tc-count)
+	(up-compare-goal villagercount >= eco-fortify-vills-min)
+	(wood-amount >= tower-wood-min)
+	(up-compare-goal mem-tower-def-active != 1)
+	(building-type-count-total tower-class g:< mem-build-gate-now)
+	(up-compare-goal mem-build-gate-now g:>= fort-ratio-gates-tier1)
+	(up-compare-goal mem-build-wall-now g:>= fort-ratio-walls-tier1)
+=>
 	(set-goal mem-tower-def-active 1)
 	(set-goal mem-tower-def-slot 0)
 	(set-goal mem-tower-stuck 0))
