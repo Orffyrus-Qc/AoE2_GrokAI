@@ -1,6 +1,6 @@
 {
     "Author": "Orffyrus",
     "CacheStatus": 0,
-    "Description": "GrokAI v2.0: gate reserve, 25-tile compounds, 1 tower/10 buildings, stone queue.",
+    "Description": "GrokAI v2.0.1: v2.0 + memory.per init split (ERR6002 fix).",
     "Title": "GrokAI"
 }
