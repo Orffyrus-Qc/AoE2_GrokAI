@@ -181,6 +181,22 @@
 	(current-age >= feudal-age)
 	(game-time < wall-time-max)
 	(wood-amount >= wall-start-wood)
+	(up-compare-goal mem-stronghold-tc-done g:>= 1)
+=>
+	(set-goal mem-wall-site wall-site-outer1)
+	(set-goal mem-wall-segments wall-choke-seg-gate)
+	(set-goal mem-wall-dir wall-side-east)
+	(set-goal mem-wall-stuck 0)
+	(set-goal mem-wall-phase wall-phase-build))
+
+(defrule
+	(up-compare-goal mem-wall-active == 1)
+	(up-compare-goal mem-wall-phase == wall-phase-idle)
+	(building-type-count town-center >= 1)
+	(current-age >= feudal-age)
+	(game-time < wall-time-max)
+	(wood-amount >= wall-start-wood)
+	(up-compare-goal mem-stronghold-tc-done < 1)
 =>
 	(set-goal mem-wall-site wall-site-tc)
 	(set-goal mem-wall-segments wall-side-south)
