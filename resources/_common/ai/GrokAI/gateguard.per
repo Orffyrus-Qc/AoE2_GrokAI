@@ -1,37 +1,13 @@
 ;==============================================================================
-; GrokAI v1.5 - Gate placement guard: wall tile + aligned orientation only
-; Works with gatealign.per and stonewall.per stub-before-gate rules.
+; GrokAI v1.5.1 - Gate guard: retry gate tile until wall stub exists
+; Alignment is handled by gatealign.per (do NOT reset align here).
 ;==============================================================================
 
-; ======================== REFRESH ALIGNMENT DURING GATE SEGMENTS ========================
-(defrule
-(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
-(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
-	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
-	(up-point-contains saved-point-x c: wall-class)
-=>
-	(set-goal mem-gate-align gate-align-none)
-	(set-goal mem-gate-stone-align gate-align-none))
-
-; ======================== BLOCK GATE WITHOUT WALL TILE — RETRY ========================
 (defrule
 (or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
 (or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
 	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
 	(not (up-point-contains saved-point-x c: wall-class))
-	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
-=>
-	(up-modify-goal mem-wall-stuck c:+ 1)
-	(up-lerp-tiles saved-point-x position-self-x c: 1))
-
-; ======================== BLOCK GATE WITHOUT VALID ALIGN — RETRY ========================
-(defrule
-(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
-(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
-	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
-	(up-point-contains saved-point-x c: wall-class)
-	(up-compare-goal mem-gate-align == gate-align-none)
-	(up-compare-goal mem-gate-stone-align == gate-align-none)
 	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
 =>
 	(up-modify-goal mem-wall-stuck c:+ 1)

@@ -354,6 +354,12 @@
 ; ======================== EXTRA BUILDERS ON TOWERS / TC / CASTLE ========================
 (defrule
 	(up-pending-objects c: watch-tower >= 1)
+	(up-compare-goal mem-build-tower-vills >= 2)
+=>
+	(up-assign-builders c: watch-tower g: mem-build-tower-vills))
+
+(defrule
+	(up-pending-objects c: watch-tower >= 1)
 	(up-compare-goal mem-build-tower-vills >= 6)
 =>
 	(up-assign-builders c: watch-tower c: 6))

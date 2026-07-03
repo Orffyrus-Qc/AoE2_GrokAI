@@ -78,8 +78,7 @@
 =>
 	(set-goal mem-tower-def-active 1)
 	(set-goal mem-tower-def-slot 0)
-	(set-goal mem-tower-stuck 0)
-	(set-goal mem-build-tower-lock 1))
+	(set-goal mem-tower-stuck 0))
 
 (defrule
 	(current-age >= castle-age)
@@ -92,7 +91,6 @@
 	(set-goal mem-tower-off-active 1)
 	(set-goal mem-tower-off-slot 0)
 	(set-goal mem-tower-stuck 0)
-	(set-goal mem-build-tower-lock 1)
 	(set-goal trainbombard yes))
 
 (defrule
@@ -107,7 +105,6 @@
 	(set-goal mem-tower-off-active 1)
 	(set-goal mem-tower-off-slot 0)
 	(set-goal mem-tower-stuck 0)
-	(set-goal mem-build-tower-lock 1)
 	(set-goal trainbombard yes))
 
 (defrule

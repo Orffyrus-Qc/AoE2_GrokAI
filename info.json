@@ -1,6 +1,6 @@
 {
     "Author": "Orffyrus",
-    "CacheStatus": 1,
-    "Description": "GrokAI v1.5: dedicated tower builders + aligned gates on walls.",
+    "CacheStatus": 0,
+    "Description": "GrokAI v1.5.1: fix gates and tower placement/build.",
     "Title": "GrokAI"
 }

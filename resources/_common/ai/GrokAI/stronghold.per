@@ -325,18 +325,6 @@
 	(stone-amount < fort-stone-min))
 	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
 	(up-compare-goal mem-compound-side-len g:>= wall-gate-min-tiles)
-	(building-type-count-total gate >= 1)
-=>
-	(set-goal mem-stronghold-seg stronghold-seg-done))
-
-(defrule
-	(up-compare-goal mem-stronghold-active == 1)
-	(up-compare-goal mem-stronghold-mode != stronghold-mode-castle)
-	(up-compare-goal mem-stronghold-mode != stronghold-mode-maintain-castle)
-(or	(up-compare-goal mem-wall-tier == wall-tier-palisade)
-	(stone-amount < fort-stone-min))
-	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
-	(up-compare-goal mem-compound-side-len g:>= wall-gate-min-tiles)
 	(wood-amount >= wall-segment-wood)
 	(up-point-contains saved-point-x c: wall-class)
 	(up-compare-goal mem-gate-align == 0)
@@ -433,26 +421,13 @@
 	(current-age >= feudal-age)
 	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
 	(up-compare-goal mem-compound-side-len g:>= wall-gate-min-tiles)
-	(building-type-count-total gate >= 1)
-=>
-	(set-goal mem-stronghold-seg stronghold-seg-done))
-
-(defrule
-	(up-compare-goal mem-stronghold-active == 1)
-(or	(up-compare-goal mem-stronghold-mode == stronghold-mode-castle)
-(or	(up-compare-goal mem-stronghold-mode == stronghold-mode-maintain-castle)
-(or	(up-compare-goal mem-stronghold-mode == stronghold-mode-stone-upgrade)
-	(up-compare-goal mem-wall-tier >= wall-tier-stone))))
-	(current-age >= feudal-age)
-	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
-	(up-compare-goal mem-compound-side-len g:>= wall-gate-min-tiles)
 	(stone-amount >= fort-stone-min)
 	(up-point-contains saved-point-x c: wall-class)
 	(up-compare-goal mem-gate-stone-align == 0)
 	(up-can-build-line 0 saved-point-x c: stone-gate1)
 =>
 	(up-build-line saved-point-x saved-point-x c: stone-gate1)
-	(up-assign-builders c: wall-class c: 2)
+	(up-assign-builders c: stone-gate1 g: mem-build-gate-vills)
 	(set-goal mem-stronghold-seg stronghold-seg-done)
 	(set-goal mem-wall-stuck 0))
 
@@ -471,7 +446,7 @@
 	(up-can-build-line 0 saved-point-x c: stone-gate2)
 =>
 	(up-build-line saved-point-x saved-point-x c: stone-gate2)
-	(up-assign-builders c: wall-class c: 2)
+	(up-assign-builders c: stone-gate2 g: mem-build-gate-vills)
 	(set-goal mem-stronghold-seg stronghold-seg-done)
 	(set-goal mem-wall-stuck 0))
 
@@ -490,7 +465,7 @@
 	(up-can-build-line 0 saved-point-x c: stone-gate3)
 =>
 	(up-build-line saved-point-x saved-point-x c: stone-gate3)
-	(up-assign-builders c: wall-class c: 2)
+	(up-assign-builders c: stone-gate3 g: mem-build-gate-vills)
 	(set-goal mem-stronghold-seg stronghold-seg-done)
 	(set-goal mem-wall-stuck 0))
 
@@ -509,7 +484,7 @@
 	(up-can-build-line 0 saved-point-x c: stone-gate4)
 =>
 	(up-build-line saved-point-x saved-point-x c: stone-gate4)
-	(up-assign-builders c: wall-class c: 2)
+	(up-assign-builders c: stone-gate4 g: mem-build-gate-vills)
 	(set-goal mem-stronghold-seg stronghold-seg-done)
 	(set-goal mem-wall-stuck 0))
 
@@ -1006,12 +981,6 @@
 	(up-compare-goal mem-stronghold-active == 1)
 (or	(up-compare-goal mem-stronghold-mode == stronghold-mode-maintain)
 	(up-compare-goal mem-stronghold-mode == stronghold-mode-maintain-castle))
-	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
-	(up-compare-goal mem-compound-side-len g:>= wall-gate-min-tiles)
-	(building-type-count-total gate >= 1)
-=>
-	(set-goal mem-stronghold-seg stronghold-seg-done))
-
 (defrule
 	(up-compare-goal mem-stronghold-active == 1)
 	(up-compare-goal mem-stronghold-mode == stronghold-mode-maintain)

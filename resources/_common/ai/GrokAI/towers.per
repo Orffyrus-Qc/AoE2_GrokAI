@@ -224,7 +224,17 @@
 	(research ri-bombard-tower))
 
 ; ======================== DEFENSIVE PLACEMENT (TC FLANKS) ========================
-; Slot 0: TC pushed toward enemy approach
+; Slot 0: TC flank (compound corner when sealing, else toward enemy)
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(up-compare-goal mem-tower-def-slot == 0)
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-seg >= stronghold-seg-wall-south)
+=>
+	(up-copy-point saved-point-x point4-x)
+	(up-modify-goal saved-point-x g:+ mem-compound-padding)
+	(up-modify-goal saved-point-y g:- mem-compound-padding))
+
 (defrule
 	(up-compare-goal mem-tower-def-active == 1)
 	(up-compare-goal mem-tower-def-slot == 0)
@@ -235,6 +245,20 @@
 	(up-set-target-object search-local c: 0)
 	(up-get-point position-object saved-point-x)
 	(up-lerp-tiles saved-point-x enemy-x c: tower-def-forward))
+
+; Fallback: offset from TC when enemy vector spot is blocked
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(up-compare-goal mem-tower-def-slot == 0)
+	(building-type-count town-center >= 1)
+	(not (up-can-build-line 0 saved-point-x c: watch-tower-building))
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 1)
+	(up-set-target-object search-local c: 0)
+	(up-get-point position-object saved-point-x)
+	(up-modify-goal saved-point-x c:+ tower-def-forward)
+	(up-modify-goal saved-point-y c:- tower-def-forward-side))
 
 ; Slot 1: second flank, offset perpendicular to the threat line
 (defrule
@@ -382,11 +406,31 @@
 	(up-compare-goal mem-tower-def-active == 1)
 	(current-age >= feudal-age)
 	(wood-amount >= tower-wood-min)
-(or	(current-age <= castle-age)
+	(up-compare-goal mem-build-tower-vills >= 2)
+(or	(current-age < castle-age)
 	(stone-amount < tower-stone-min))
 	(up-compare-goal mem-tower-def-slot < tower-def-max)
 	(up-pending-objects c: watch-tower < tower-pending-max)
+	(can-build watch-tower)
 	(up-can-build-line 0 saved-point-x c: watch-tower-building)
+=>
+	(set-strategic-number sn-ignore-tower-elevation 1)
+	(up-build-line saved-point-x saved-point-x c: watch-tower-building)
+	(up-assign-builders c: watch-tower g: mem-build-tower-vills)
+	(up-modify-goal mem-tower-def-slot c:+ 1)
+	(set-goal mem-tower-stuck 0))
+
+; ======================== BUILD DEFENSIVE CASTLE GUARD ========================
+(defrule
+	(up-compare-goal mem-tower-def-active == 1)
+	(current-age >= castle-age)
+	(wood-amount >= tower-wood-min)
+	(up-compare-goal mem-build-tower-vills >= 2)
+	(up-compare-goal mem-tower-def-slot < tower-def-max)
+	(up-pending-objects c: watch-tower < tower-pending-max)
+	(can-build watch-tower)
+	(up-can-build-line 0 saved-point-x c: watch-tower-building)
+	(not (up-can-build-line 0 saved-point-x c: bombard-tower))
 =>
 	(set-strategic-number sn-ignore-tower-elevation 1)
 	(up-build-line saved-point-x saved-point-x c: watch-tower-building)
@@ -399,6 +443,7 @@
 	(up-compare-goal mem-tower-def-active == 1)
 	(current-age >= castle-age)
 	(stone-amount >= tower-stone-min)
+	(up-compare-goal mem-build-tower-vills >= 2)
 	(up-compare-goal mem-tower-def-slot < tower-def-max)
 	(up-pending-objects c: bombard-tower < tower-pending-max)
 	(can-build bombard-tower)
@@ -415,6 +460,7 @@
 	(up-compare-goal mem-tower-off-active == 1)
 	(current-age >= castle-age)
 	(stone-amount >= tower-stone-min)
+	(up-compare-goal mem-build-tower-vills >= 2)
 	(up-compare-goal mem-tower-off-slot < tower-off-max)
 	(up-pending-objects c: bombard-tower < tower-pending-max)
 	(up-point-distance temporary-point-x position-self-x >= tower-off-min-dist)
