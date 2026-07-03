@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v1.9 - Gate guard: slide along wall until walkable + wall stub exists
+; GrokAI v2.1 - Gate guard: slide along wall until walkable + wall stub exists
 ; Alignment is handled by gatealign.per (do NOT reset align here).
 ;==============================================================================
 
@@ -135,3 +135,64 @@
 =>
 	(up-modify-goal mem-wall-stuck c:+ 1)
 	(up-lerp-tiles saved-point-x point4-x c: 1))
+
+; ======================== CORRIDOR GATES: SLIDE ALONG PARALLEL WALL AXIS ========================
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-from)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point4-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-from)
+	(up-compare-goal mem-wall-stuck >= 2)
+=>
+	(up-lerp-tiles saved-point-x point3-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-to)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point3-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-to)
+	(up-compare-goal mem-wall-stuck >= 2)
+=>
+	(up-lerp-tiles saved-point-x point4-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-gate-walk-ok != 1)
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-from)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point4-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-gate-walk-ok != 1)
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-to)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point3-x c: 1))

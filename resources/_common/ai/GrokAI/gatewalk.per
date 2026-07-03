@@ -1,18 +1,20 @@
 ;==============================================================================
-; GrokAI v2.0 - Gate walkability: both sides clear + enclosed area >= 25 tiles
+; GrokAI v2.1 - Gate walkability: both sides clear + enclosed area >= 25 tiles
 ; Probes inside (toward compound center) and outside (away) before gate build.
 ; PER conditions only before =>; point checks cannot live in action blocks.
 ;==============================================================================
 
 (defrule
 (or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)
 (or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
-	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))))
 =>
 	(set-goal mem-gate-walk-ok 0)
 	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
 
-; Compound center scratch (NE + SW corners)
+; Compound center scratch (NE + SW corners) — not for corridor (preserves point2-x)
 (defrule
 (or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
 (or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
@@ -297,6 +299,132 @@
 	(not (up-point-contains temporary-point-x c: gate-class))
 	(up-point-distance point4-x point-x g:>= compound-min-side-tiles)
 	(up-point-distance point-x point2-x g:>= compound-min-side-tiles)
+=>
+	(set-goal mem-gate-walk-ok 1)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+; ======================== CORRIDOR GATE FROM (into corridor / into compound) ========================
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-from)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-ready)
+=>
+	(up-copy-point temporary-point-x saved-point-x)
+	(up-lerp-tiles temporary-point-x point4-x c: gate-walk-probe-dist)
+	(set-goal mem-gate-walk-phase gate-walk-phase-inside))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-from)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-inside)
+(or	(up-point-contains temporary-point-x c: tree-class)
+(or	(up-point-contains temporary-point-x c: wall-class)
+	(up-point-contains temporary-point-x c: gate-class)))
+=>
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-from)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-inside)
+	(not (up-point-contains temporary-point-x c: tree-class))
+	(not (up-point-contains temporary-point-x c: wall-class))
+	(not (up-point-contains temporary-point-x c: gate-class))
+=>
+	(up-copy-point temporary-point-x saved-point-x)
+	(up-lerp-tiles temporary-point-x point-x c: gate-walk-probe-dist)
+	(set-goal mem-gate-walk-phase gate-walk-phase-outside))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-from)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-outside)
+(or	(up-point-contains temporary-point-x c: tree-class)
+(or	(up-point-contains temporary-point-x c: wall-class)
+	(up-point-contains temporary-point-x c: gate-class)))
+=>
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-from)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-outside)
+	(not (up-point-contains temporary-point-x c: tree-class))
+	(not (up-point-contains temporary-point-x c: wall-class))
+	(not (up-point-contains temporary-point-x c: gate-class))
+=>
+	(set-goal mem-gate-walk-ok 1)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+; ======================== CORRIDOR GATE TO (into corridor / into compound) ========================
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-to)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-ready)
+=>
+	(up-copy-point temporary-point-x saved-point-x)
+	(up-lerp-tiles temporary-point-x point3-x c: gate-walk-probe-dist)
+	(set-goal mem-gate-walk-phase gate-walk-phase-inside))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-to)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-inside)
+(or	(up-point-contains temporary-point-x c: tree-class)
+(or	(up-point-contains temporary-point-x c: wall-class)
+	(up-point-contains temporary-point-x c: gate-class)))
+=>
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-to)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-inside)
+	(not (up-point-contains temporary-point-x c: tree-class))
+	(not (up-point-contains temporary-point-x c: wall-class))
+	(not (up-point-contains temporary-point-x c: gate-class))
+=>
+	(up-copy-point temporary-point-x saved-point-x)
+	(up-lerp-tiles temporary-point-x point2-x c: gate-walk-probe-dist)
+	(set-goal mem-gate-walk-phase gate-walk-phase-outside))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-to)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-outside)
+(or	(up-point-contains temporary-point-x c: tree-class)
+(or	(up-point-contains temporary-point-x c: wall-class)
+	(up-point-contains temporary-point-x c: gate-class)))
+=>
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to))
+	(up-compare-goal mem-compound-gate-pass == corridor-gate-pass-to)
+	(up-compare-goal mem-gate-walk-ok == 0)
+	(up-compare-goal mem-gate-walk-phase == gate-walk-phase-outside)
+	(not (up-point-contains temporary-point-x c: tree-class))
+	(not (up-point-contains temporary-point-x c: wall-class))
+	(not (up-point-contains temporary-point-x c: gate-class))
 =>
 	(set-goal mem-gate-walk-ok 1)
 	(set-goal mem-gate-walk-phase gate-walk-phase-ready))

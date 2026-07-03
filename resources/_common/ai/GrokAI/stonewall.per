@@ -50,7 +50,9 @@
 	(up-compare-goal mem-wall-tier >= wall-tier-stone)
 (or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
 (or	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)
-	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)))
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)))))
 	(not (up-point-contains saved-point-x c: wall-class))
 	(up-can-build-line 0 saved-point-x c: stone-wall)
 =>
@@ -63,7 +65,9 @@
 	(stone-amount < fort-stone-min)
 (or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
 (or	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)
-	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)))
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)))))
 	(not (up-point-contains saved-point-x c: wall-class))
 	(wood-amount >= wall-segment-wood)
 	(up-can-build-line 0 saved-point-x c: palisade-wall)
@@ -76,7 +80,9 @@
 (defrule
 (or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
 (or	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)
-	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)))
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)))))
 	(not (up-point-contains saved-point-x c: wall-class))
 	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
 =>

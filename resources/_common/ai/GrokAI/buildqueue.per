@@ -16,10 +16,22 @@
 (defrule
 	(up-compare-goal mem-wall-tier >= wall-tier-stone)
 	(stone-amount < fort-stone-min)
-	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)))
 =>
 	(set-goal mem-stone-queue-active 1)
 	(set-goal mem-build-queue-gate 1))
+
+(defrule
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(stone-amount < fort-stone-min)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+(or	(up-compare-goal mem-stronghold-seg == corridor-seg-line-a)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-line-b))
+=>
+	(set-goal mem-stone-queue-active 1)
+	(set-goal mem-build-queue-wall 1))
 
 ; ======================== QUEUE TOWERS ========================
 (defrule

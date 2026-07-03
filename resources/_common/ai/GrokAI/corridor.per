@@ -1,0 +1,259 @@
+;==============================================================================
+; GrokAI v2.1 - Parallel wall corridors link sealed TC compounds (2+ TCs)
+; Two parallel stone lines between compounds; gates at each end for travel.
+; point-x/point2-x = outer parallel wall; point3-x/point4-x = inner parallel wall
+;==============================================================================
+
+; ======================== GEOMETRY: TC PAIR -> PARALLEL WALL ENDPOINTS ========================
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-setup)
+	(building-type-count town-center >= 2)
+=>
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 8)
+	(up-set-target-object search-local g: mem-stronghold-index)
+	(up-get-point position-object saved-point-x)
+	(up-full-reset-search)
+	(up-find-local c: town-center c: 8)
+	(up-set-target-object search-local g: mem-corridor-to)
+	(up-get-point position-object temporary-point-x)
+	(up-copy-point point-x saved-point-x)
+	(up-lerp-tiles point-x temporary-point-x g: mem-compound-padding)
+	(up-copy-point point2-x temporary-point-x)
+	(up-lerp-tiles point2-x saved-point-x g: mem-compound-padding)
+	(up-copy-point point3-x point-x)
+	(up-cross-tiles point3-x point2-x c: corridor-half-width)
+	(up-copy-point point4-x point2-x)
+	(up-cross-tiles point4-x point-x c: corridor-half-width)
+	(up-copy-point saved-point-x point-x)
+	(up-lerp-tiles saved-point-x point2-x g: mem-compound-padding)
+	(up-copy-point temporary-point-x point2-x)
+	(up-lerp-tiles temporary-point-x point-x g: mem-compound-padding)
+	(up-cross-tiles saved-point-x temporary-point-x c: corridor-half-width-neg)
+	(up-cross-tiles temporary-point-x saved-point-x c: corridor-half-width-neg)
+	(set-goal mem-compound-gate-pass corridor-gate-pass-from)
+	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
+	(set-goal mem-wall-stuck 0)
+	(set-goal mem-stronghold-seg corridor-seg-line-a))
+
+; ======================== OUTER PARALLEL WALL (LINE A) ========================
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-line-a)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(stone-amount >= fort-stone-min)
+	(up-can-build-line point3-x point4-x c: stone-wall)
+=>
+	(up-build-line point3-x point4-x c: stone-wall)
+	(up-assign-builders c: wall-class c: 2))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-line-a)
+	(up-compare-goal mem-wall-tier == wall-tier-palisade)
+	(wood-amount >= wall-segment-wood)
+	(up-can-build-line point3-x point4-x c: palisade-wall)
+=>
+	(up-build-line point3-x point4-x c: palisade-wall)
+	(up-assign-builders c: wall-class c: 1))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-line-a)
+	(not (up-can-build-line point3-x point4-x c: stone-wall))
+	(not (up-can-build-line point3-x point4-x c: palisade-wall))
+=>
+	(set-goal mem-stronghold-seg corridor-seg-line-b))
+
+; ======================== INNER PARALLEL WALL (LINE B) ========================
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-line-b)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(stone-amount >= fort-stone-min)
+	(up-can-build-line saved-point-x temporary-point-x c: stone-wall)
+=>
+	(up-build-line saved-point-x temporary-point-x c: stone-wall)
+	(up-assign-builders c: wall-class c: 2))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-line-b)
+	(up-compare-goal mem-wall-tier == wall-tier-palisade)
+	(wood-amount >= wall-segment-wood)
+	(up-can-build-line saved-point-x temporary-point-x c: palisade-wall)
+=>
+	(up-build-line saved-point-x temporary-point-x c: palisade-wall)
+	(up-assign-builders c: wall-class c: 1))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-line-b)
+=>
+	(set-goal mem-stronghold-seg corridor-seg-gate-from)
+	(set-goal mem-compound-gate-pass corridor-gate-pass-from)
+	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+; ======================== GATE AT COMPOUND-FROM (OUTER WALL MOUTH) ========================
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+=>
+	(up-copy-point saved-point-x point3-x))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(up-point-contains saved-point-x c: gate-class)
+=>
+	(set-goal mem-stronghold-seg corridor-seg-gate-to)
+	(set-goal mem-compound-gate-pass corridor-gate-pass-to)
+	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-can-build-line 0 saved-point-x c: stone-wall)
+=>
+	(up-build-line saved-point-x saved-point-x c: stone-wall)
+	(up-assign-builders c: wall-class c: 2))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-walk-ok == 1)
+	(up-compare-goal mem-gate-stone-align == 0)
+	(up-can-build-line 0 saved-point-x c: stone-gate1)
+=>
+	(up-build-line saved-point-x saved-point-x c: stone-gate1)
+	(up-assign-builders c: stone-gate1 g: mem-build-gate-vills)
+	(set-goal mem-stronghold-seg corridor-seg-gate-to)
+	(set-goal mem-compound-gate-pass corridor-gate-pass-to)
+	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-from)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-walk-ok == 1)
+	(up-compare-goal mem-gate-stone-align == 1)
+	(up-can-build-line 0 saved-point-x c: stone-gate2)
+=>
+	(up-build-line saved-point-x saved-point-x c: stone-gate2)
+	(up-assign-builders c: stone-gate2 g: mem-build-gate-vills)
+	(set-goal mem-stronghold-seg corridor-seg-gate-to)
+	(set-goal mem-compound-gate-pass corridor-gate-pass-to)
+	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
+
+; ======================== GATE AT COMPOUND-TO (OUTER WALL MOUTH) ========================
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)
+=>
+	(up-copy-point saved-point-x point4-x))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)
+	(up-point-contains saved-point-x c: gate-class)
+=>
+	(set-goal mem-stronghold-seg corridor-seg-done))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-can-build-line 0 saved-point-x c: stone-wall)
+=>
+	(up-build-line saved-point-x saved-point-x c: stone-wall)
+	(up-assign-builders c: wall-class c: 2))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-walk-ok == 1)
+	(up-compare-goal mem-gate-stone-align == 0)
+	(up-can-build-line 0 saved-point-x c: stone-gate1)
+=>
+	(up-build-line saved-point-x saved-point-x c: stone-gate1)
+	(up-assign-builders c: stone-gate1 g: mem-build-gate-vills)
+	(set-goal mem-stronghold-seg corridor-seg-done))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg == corridor-seg-gate-to)
+	(stone-amount >= fort-stone-min)
+	(up-compare-goal mem-wall-tier >= wall-tier-stone)
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-walk-ok == 1)
+	(up-compare-goal mem-gate-stone-align == 1)
+	(up-can-build-line 0 saved-point-x c: stone-gate2)
+=>
+	(up-build-line saved-point-x saved-point-x c: stone-gate2)
+	(up-assign-builders c: stone-gate2 g: mem-build-gate-vills)
+	(set-goal mem-stronghold-seg corridor-seg-done))
+
+; ======================== ADVANCE AFTER CORRIDOR LINK ========================
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg >= corridor-seg-done)
+=>
+	(up-modify-goal mem-corridor-links-done c:+ 1)
+	(up-modify-goal mem-stronghold-index g:= mem-stronghold-tc-done)
+	(set-goal mem-stronghold-seg stronghold-seg-setup)
+	(set-goal mem-stronghold-gate-type wall-gate-type0))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg >= corridor-seg-done)
+	(up-compare-goal mem-stronghold-tc-done g:>= mem-stronghold-tc-count)
+=>
+	(set-goal mem-stronghold-active 0)
+	(set-goal mem-stronghold-mode 0)
+	(set-goal mem-stronghold-seg 0))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-corridor)
+	(up-compare-goal mem-stronghold-seg >= corridor-seg-done)
+	(up-compare-goal mem-stronghold-tc-done g:< mem-stronghold-tc-count)
+=>
+	(set-goal mem-stronghold-mode stronghold-mode-tc))

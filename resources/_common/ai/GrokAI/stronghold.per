@@ -876,10 +876,29 @@
 	(up-lerp-tiles saved-point-x position-self-x c: 1))
 
 ; ======================== ADVANCE TC / CASTLE INDEX ========================
+; After 2nd+ compound: link previous TC pair with parallel wall corridor first
 (defrule
 	(up-compare-goal mem-stronghold-active == 1)
 	(up-compare-goal mem-stronghold-mode == stronghold-mode-tc)
 	(up-compare-goal mem-stronghold-seg >= stronghold-seg-done)
+	(up-compare-goal mem-stronghold-tc-count >= 2)
+	(up-compare-goal mem-stronghold-tc-done g:>= 1)
+=>
+	(up-modify-goal mem-stronghold-tc-done c:+ 1)
+	(up-modify-goal mem-corridor-to g:= mem-stronghold-tc-done)
+	(up-modify-goal mem-corridor-to c:- 1)
+	(up-modify-goal mem-stronghold-index g:= mem-stronghold-tc-done)
+	(up-modify-goal mem-stronghold-index c:- 2)
+	(set-goal mem-stronghold-mode stronghold-mode-corridor)
+	(set-goal mem-stronghold-seg corridor-seg-setup)
+	(set-goal mem-wall-stuck 0))
+
+(defrule
+	(up-compare-goal mem-stronghold-active == 1)
+	(up-compare-goal mem-stronghold-mode == stronghold-mode-tc)
+	(up-compare-goal mem-stronghold-seg >= stronghold-seg-done)
+(or	(up-compare-goal mem-stronghold-tc-count < 2)
+	(up-compare-goal mem-stronghold-tc-done < 1))
 =>
 	(up-modify-goal mem-stronghold-tc-done c:+ 1)
 	(up-modify-goal mem-stronghold-index g:= mem-stronghold-tc-done)
