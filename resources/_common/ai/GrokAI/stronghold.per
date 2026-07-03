@@ -410,6 +410,7 @@
 	(up-assign-builders c: wall-class c: 1)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 (defrule
@@ -431,6 +432,7 @@
 	(up-assign-builders c: wall-class c: 1)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 (defrule
@@ -452,6 +454,7 @@
 	(up-assign-builders c: wall-class c: 1)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 (defrule
@@ -473,6 +476,7 @@
 	(up-assign-builders c: wall-class c: 1)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 ; ======================== GATE WALL STUB (STONE) ========================
@@ -515,6 +519,7 @@
 	(up-assign-builders c: stone-gate1 g: mem-build-gate-vills)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 (defrule
@@ -537,6 +542,7 @@
 	(up-assign-builders c: stone-gate2 g: mem-build-gate-vills)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 (defrule
@@ -559,6 +565,7 @@
 	(up-assign-builders c: stone-gate3 g: mem-build-gate-vills)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 (defrule
@@ -581,6 +588,7 @@
 	(up-assign-builders c: stone-gate4 g: mem-build-gate-vills)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 ; Palisade gates only when stone stockpile is empty (gates still require wall tile)
@@ -602,6 +610,7 @@
 	(up-assign-builders c: wall-class c: 1)
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 ; ======================== WALL SEGMENTS (PALISADE) — full ring before gate ========================
@@ -775,7 +784,8 @@
 =>
 	(set-goal mem-stronghold-seg stronghold-seg-gate-access)
 	(set-goal mem-compound-gate-pass stronghold-gate-pass-south)
-	(set-goal mem-gate-walk-ok 0))
+	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
 
 (defrule
 	(up-compare-goal mem-stronghold-active == 1)
@@ -833,7 +843,8 @@
 =>
 	(set-goal mem-stronghold-seg stronghold-seg-gate-access)
 	(set-goal mem-compound-gate-pass stronghold-gate-pass-south)
-	(set-goal mem-gate-walk-ok 0))
+	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
 
 ; Skip stuck gate access — advance to next side
 (defrule
@@ -843,6 +854,7 @@
 =>
 	(up-modify-goal mem-compound-gate-pass c:+ 1)
 	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
 	(set-goal mem-wall-stuck 0))
 
 (defrule
@@ -993,7 +1005,8 @@
 =>
 	(set-goal mem-stronghold-seg stronghold-seg-gate-access)
 	(set-goal mem-compound-gate-pass stronghold-gate-pass-south)
-	(set-goal mem-gate-walk-ok 0))
+	(set-goal mem-gate-walk-ok 0)
+	(set-goal mem-gate-walk-phase gate-walk-phase-ready))
 
 (defrule
 	(up-compare-goal mem-stronghold-active == 1)
