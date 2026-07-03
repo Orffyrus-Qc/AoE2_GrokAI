@@ -87,7 +87,7 @@
 	(set-goal mem-raid-build-step 0)
 	(disable-self))
 
-; Build corps init (split — AoE2 rules max ~40 actions, ERR6002)
+; Build corps init (split — AoE2 rules max ~32 actions, ERR6002)
 (defrule
 	(true)
 =>
@@ -107,6 +107,11 @@
 	(set-goal mem-gate-stone-align gate-align-none)
 	(set-goal mem-compound-gate-side wall-side-east)
 	(set-goal mem-compound-side-len 0)
+	(disable-self))
+
+(defrule
+	(true)
+=>
 	(set-goal mem-explore-retreat 0)
 	(set-goal mem-explore-threat-near 0)
 	(set-goal mem-orchestrator-arm 0)
@@ -119,6 +124,11 @@
 	(set-goal mem-compound-gate-pass stronghold-gate-pass-south)
 	(set-goal mem-gate-walk-ok 0)
 	(set-goal mem-gate-walk-phase gate-walk-phase-ready)
+	(disable-self))
+
+(defrule
+	(true)
+=>
 	(set-goal mem-build-tower-target 0)
 	(set-goal mem-build-structure-count 0)
 	(set-goal mem-stone-queue-active 0)
