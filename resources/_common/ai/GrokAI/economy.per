@@ -1,6 +1,6 @@
 ;==============================================================================
-; GrokAI v4.0 - Economy: loud boom + stone for multi-TC compounds
-; Keeps villager momentum; limits gold/stone over-commit during growth.
+; GrokAI v1.7 - Economy: food-first, lean vills, army-favored pop
+; Caps villagers early; limits stone/wood drain from fortify.
 ;==============================================================================
 
 ; Keep training villagers through feudal/castle boom
@@ -34,10 +34,10 @@
 (defrule
 	(current-age == feudal-age)
 	(up-compare-goal villagercount < eco-boom-vills-feudal)
-	(strategic-number sn-food-gatherer-percentage < 55)
+	(strategic-number sn-food-gatherer-percentage < 68)
 =>
-	(set-strategic-number sn-food-gatherer-percentage 55)
-	(set-strategic-number sn-wood-gatherer-percentage 35)
+	(set-strategic-number sn-food-gatherer-percentage 68)
+	(set-strategic-number sn-wood-gatherer-percentage 22)
 	(set-strategic-number sn-gold-gatherer-percentage 5)
 	(set-strategic-number sn-stone-gatherer-percentage 5))
 
@@ -66,24 +66,37 @@
 =>
 	(set-strategic-number sn-gold-gatherer-percentage 8))
 
-; Scale villager count with growing build corps
+; Cap villagers — free population for army
 (defrule
 	(current-age >= feudal-age)
-	(up-compare-goal mem-build-pool-size >= build-pool-castle)
-	(up-compare-goal villagercount < 36)
-	(goal trainvillager no)
-	(food-amount >= 200)
+	(current-age < castle-age)
+	(up-compare-goal villagercount >= eco-boom-vills-feudal)
 =>
-	(set-goal trainvillager yes))
+	(set-goal trainvillager no))
 
 (defrule
 	(current-age >= castle-age)
-	(up-compare-goal mem-build-pool-size >= build-pool-imp)
-	(up-compare-goal villagercount < 42)
-	(goal trainvillager no)
-	(food-amount >= 250)
+	(current-age < imperial-age)
+	(up-compare-goal villagercount >= eco-boom-vills-castle)
 =>
-	(set-goal trainvillager yes))
+	(set-goal trainvillager no))
+
+(defrule
+	(current-age >= imperial-age)
+	(up-compare-goal villagercount >= eco-boom-vills-loud)
+=>
+	(set-goal trainvillager no))
+
+; Food stockpile bias when below boom target
+(defrule
+	(current-age >= feudal-age)
+	(food-amount < eco-boom-food-min)
+	(strategic-number sn-food-gatherer-percentage < 62)
+=>
+	(set-strategic-number sn-food-gatherer-percentage 62)
+	(set-strategic-number sn-wood-gatherer-percentage 24)
+	(set-strategic-number sn-gold-gatherer-percentage 8)
+	(set-strategic-number sn-stone-gatherer-percentage 6))
 
 (defrule
 	(current-age >= feudal-age)
@@ -101,9 +114,9 @@
 		(up-compare-goal mem-wall-tier >= wall-tier-stone))))
 =>
 	(set-strategic-number sn-wood-gatherer-percentage eco-fortify-wood-priority)
-	(set-strategic-number sn-food-gatherer-percentage 42)
+	(set-strategic-number sn-food-gatherer-percentage 58)
 	(set-strategic-number sn-gold-gatherer-percentage 5)
-	(set-strategic-number sn-stone-gatherer-percentage 5))
+	(set-strategic-number sn-stone-gatherer-percentage 4))
 
 (defrule
 	(current-age >= feudal-age)

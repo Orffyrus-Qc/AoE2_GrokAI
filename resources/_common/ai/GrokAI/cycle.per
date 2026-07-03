@@ -49,7 +49,7 @@
 	(set-goal mem-stronghold-gate-type wall-gate-type0)
 	(set-goal mem-wall-stuck 0))
 
-; ======================== CYCLE: OUTER WALLS + GATES WAVE ========================
+; ======================== CYCLE: OUTER WALLS + GATES WAVE (threat only) ========================
 (defrule
 	(current-age >= feudal-age)
 	(goal inseln no)
@@ -57,6 +57,9 @@
 	(game-time >= mem-fortify-next-cycle)
 	(up-compare-goal villagercount >= eco-fortify-vills-min)
 	(stone-amount >= fort-stone-min)
+(or	(goal underattack yes)
+(or	(up-compare-goal mem-aggression-score >= wall-trigger-aggression)
+	(up-compare-goal mem-attack-events >= 3)))
 =>
 	(set-goal mem-wall-tier wall-tier-stone)
 	(set-goal mem-wall-active 1)
@@ -122,7 +125,7 @@
 	(game-time >= mem-fortify-next-cycle)
 	(up-compare-goal mem-build-gate-cap g:< fort-gate-cap-max)
 =>
-	(up-modify-goal mem-build-gate-cap c:+ 1))
+	(up-modify-goal mem-build-gate-cap c:+ 0))
 
 (defrule
 	(current-age >= feudal-age)
@@ -130,7 +133,7 @@
 	(game-time >= mem-fortify-next-cycle)
 	(up-compare-goal mem-build-wall-cap g:< fort-wall-cap-max)
 =>
-	(up-modify-goal mem-build-wall-cap c:+ 8))
+	(up-modify-goal mem-build-wall-cap c:+ 3))
 
 (defrule
 	(current-age >= feudal-age)

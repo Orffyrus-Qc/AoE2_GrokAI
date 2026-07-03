@@ -22,7 +22,7 @@
 
 (defrule
 	(current-age == dark-age)
-	(civilian-population < 25)
+	(civilian-population < eco-age-vills-dark)
 	(can-train villager)
 =>
 	(train villager))
@@ -60,7 +60,7 @@
 ; Keep making villagers through feudal
 (defrule
 	(current-age >= feudal-age)
-	(civilian-population < 40)
+	(civilian-population < eco-boom-vills-loud)
 	(can-train villager)
 =>
 	(train villager))

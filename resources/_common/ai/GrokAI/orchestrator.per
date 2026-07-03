@@ -90,7 +90,11 @@
 	(up-compare-goal mem-wall-phase != wall-phase-done)
 	(up-compare-goal mem-wall-active != 1)
 	(up-compare-goal mem-fortify-ready != 1)
+	(up-compare-goal mem-build-gate-now g:< mem-build-gate-cap)
 	(wood-amount >= wall-segment-wood)
+(or	(goal underattack yes)
+(or	(up-compare-goal mem-aggression-score >= wall-trigger-aggression)
+	(up-compare-goal mem-detected-opening != opening-unknown)))
 =>
 	(set-goal mem-wall-active 1)
 	(set-goal mem-tower-def-active 1)

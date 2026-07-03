@@ -27,9 +27,9 @@
 =>
 	(up-modify-goal mem-build-next-ramp g:= game-time)
 	(up-modify-goal mem-build-next-ramp c:+ build-ramp-interval)
-	(up-modify-goal mem-build-gate-cap c:+ 1)
-	(up-modify-goal mem-build-wall-cap c:+ 4)
-	(up-modify-goal mem-build-pool-size c:+ 1))
+	(up-modify-goal mem-build-gate-cap c:+ 0)
+	(up-modify-goal mem-build-wall-cap c:+ 2)
+	(up-modify-goal mem-build-pool-size c:+ 0))
 
 (defrule
 	(up-compare-goal mem-build-gate-cap g:> fort-gate-cap-max)
@@ -67,24 +67,10 @@
 
 (defrule
 	(current-age >= feudal-age)
-	(up-compare-goal mem-stronghold-tc-count >= 2)
-	(up-compare-goal mem-build-pool-size g:< build-pool-max)
-=>
-	(up-modify-goal mem-build-pool-size c:+ 1))
-
-(defrule
-	(current-age >= feudal-age)
 	(up-compare-goal mem-stronghold-tc-count >= 3)
 	(up-compare-goal mem-build-pool-size g:< build-pool-max)
 =>
 	(up-modify-goal mem-build-pool-size c:+ 1))
-
-(defrule
-	(current-age >= castle-age)
-	(up-compare-goal mem-stronghold-castle-count >= 1)
-	(up-compare-goal mem-build-pool-size g:< build-pool-max)
-=>
-	(up-modify-goal mem-build-pool-size c:+ 2))
 
 ; Per-role targets derived from pool
 (defrule
@@ -423,7 +409,7 @@
 =>
 	(up-assign-builders c: castle c: 4))
 
-; ======================== KEEP FORTIFY GOING UNDER RISING CAPS ========================
+; ======================== KEEP FORTIFY GOING UNDER RISING CAPS (threat only) ========================
 (defrule
 	(goal inseln no)
 	(current-age >= feudal-age)
@@ -433,6 +419,8 @@
 	(up-compare-goal mem-build-gate-now g:< mem-build-gate-cap)
 (or	(wood-amount >= wall-segment-wood)
 	(stone-amount >= fort-stone-min))
+(or	(goal underattack yes)
+	(up-compare-goal mem-aggression-score >= wall-trigger-aggression))
 =>
 	(set-goal mem-wall-active 1)
 	(set-goal mem-wall-phase wall-phase-build)
@@ -448,6 +436,8 @@
 	(up-compare-goal mem-wall-active != 1)
 	(up-compare-goal mem-build-wall-now g:< mem-build-wall-cap)
 	(wood-amount >= wall-segment-wood)
+(or	(goal underattack yes)
+	(up-compare-goal mem-aggression-score >= wall-trigger-aggression))
 =>
 	(set-goal mem-wall-active 1)
 	(set-goal mem-wall-phase wall-phase-build)
