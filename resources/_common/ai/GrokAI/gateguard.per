@@ -1,5 +1,5 @@
 ;==============================================================================
-; GrokAI v1.5.1 - Gate guard: retry gate tile until wall stub exists
+; GrokAI v1.9 - Gate guard: slide along wall until walkable + wall stub exists
 ; Alignment is handled by gatealign.per (do NOT reset align here).
 ;==============================================================================
 
@@ -9,6 +9,129 @@
 	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
 	(not (up-point-contains saved-point-x c: wall-class))
 	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-south)
 =>
 	(up-modify-goal mem-wall-stuck c:+ 1)
-	(up-lerp-tiles saved-point-x position-self-x c: 1))
+	(up-lerp-tiles saved-point-x point-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-south)
+	(up-compare-goal mem-wall-stuck >= 2)
+=>
+	(up-lerp-tiles saved-point-x point4-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-east)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point2-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-east)
+	(up-compare-goal mem-wall-stuck >= 2)
+=>
+	(up-lerp-tiles saved-point-x point-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-north)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point2-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-north)
+	(up-compare-goal mem-wall-stuck >= 2)
+=>
+	(up-lerp-tiles saved-point-x point3-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-west)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point3-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(not (up-point-contains saved-point-x c: wall-class))
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-west)
+	(up-compare-goal mem-wall-stuck >= 2)
+=>
+	(up-lerp-tiles saved-point-x point4-x c: 1))
+
+; Slide along wall when walk probes fail
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(up-compare-goal mem-gate-walk-ok != 1)
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-south)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(up-compare-goal mem-gate-walk-ok != 1)
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-east)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point2-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(up-compare-goal mem-gate-walk-ok != 1)
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-north)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point2-x c: 1))
+
+(defrule
+(or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
+(or	(up-compare-goal mem-wall-segments == wall-choke-seg-gate)
+	(up-compare-goal mem-wall-segments == wall-seg-tc-gate-access)))
+	(up-compare-goal mem-gate-walk-ok != 1)
+	(up-compare-goal mem-wall-stuck < wall-gate-retry-max)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-west)
+=>
+	(up-modify-goal mem-wall-stuck c:+ 1)
+	(up-lerp-tiles saved-point-x point4-x c: 1))

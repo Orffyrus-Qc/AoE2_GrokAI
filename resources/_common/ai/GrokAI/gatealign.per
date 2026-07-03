@@ -13,6 +13,71 @@
 	(set-goal mem-gate-align gate-align-none)
 	(set-goal mem-gate-stone-align gate-align-none))
 
+; ======================== SIDE-AWARE ALIGNMENT (walkable through wall axis) ========================
+(defrule
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-align == gate-align-none)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-south)
+	(up-can-build-line 0 saved-point-x c: palisade-gate2)
+=>
+	(set-goal mem-gate-align 1))
+
+(defrule
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-align == gate-align-none)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-north)
+	(up-can-build-line 0 saved-point-x c: palisade-gate2)
+=>
+	(set-goal mem-gate-align 1))
+
+(defrule
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-align == gate-align-none)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-east)
+	(up-can-build-line 0 saved-point-x c: palisade-gate1)
+=>
+	(set-goal mem-gate-align 0))
+
+(defrule
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-align == gate-align-none)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-west)
+	(up-can-build-line 0 saved-point-x c: palisade-gate1)
+=>
+	(set-goal mem-gate-align 0))
+
+(defrule
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-stone-align == gate-align-none)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-south)
+	(up-can-build-line 0 saved-point-x c: stone-gate2)
+=>
+	(set-goal mem-gate-stone-align 1))
+
+(defrule
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-stone-align == gate-align-none)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-north)
+	(up-can-build-line 0 saved-point-x c: stone-gate2)
+=>
+	(set-goal mem-gate-stone-align 1))
+
+(defrule
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-stone-align == gate-align-none)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-east)
+	(up-can-build-line 0 saved-point-x c: stone-gate1)
+=>
+	(set-goal mem-gate-stone-align 0))
+
+(defrule
+	(up-point-contains saved-point-x c: wall-class)
+	(up-compare-goal mem-gate-stone-align == gate-align-none)
+	(up-compare-goal mem-compound-gate-pass == stronghold-gate-pass-west)
+	(up-can-build-line 0 saved-point-x c: stone-gate1)
+=>
+	(set-goal mem-gate-stone-align 0))
+
 ; ======================== ACTIVE GATE SEGMENT: PROBE ALIGN ON WALL TILE ========================
 (defrule
 (or	(up-compare-goal mem-stronghold-seg == stronghold-seg-gate-access)
