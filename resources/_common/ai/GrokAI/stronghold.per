@@ -979,10 +979,6 @@
 
 (defrule
 	(up-compare-goal mem-stronghold-active == 1)
-(or	(up-compare-goal mem-stronghold-mode == stronghold-mode-maintain)
-	(up-compare-goal mem-stronghold-mode == stronghold-mode-maintain-castle))
-(defrule
-	(up-compare-goal mem-stronghold-active == 1)
 	(up-compare-goal mem-stronghold-mode == stronghold-mode-maintain)
 	(up-compare-goal mem-stronghold-seg >= stronghold-seg-done)
 =>

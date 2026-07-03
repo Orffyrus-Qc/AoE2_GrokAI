@@ -1,6 +1,6 @@
 {
     "Author": "Orffyrus",
-    "CacheStatus": 0,
-    "Description": "GrokAI v1.5.1: fix gates and tower placement/build.",
+    "CacheStatus": 1,
+    "Description": "GrokAI v1.5.2: fix stronghold.per syntax error (ERR2005 line 984).",
     "Title": "GrokAI"
 }
