@@ -25,7 +25,8 @@
 =>
 	(up-full-reset-search)
 	(up-find-local c: gate-class c: 32)
-	(up-filter-distance last-building c: -1 c: gate-reserve-radius)
+	(up-set-target-point last-building)
+	(up-filter-distance c: -1 c: gate-reserve-radius)
 	(up-get-search-state local-total))
 
 (defrule
@@ -55,7 +56,8 @@
 =>
 	(up-full-reset-search)
 	(up-find-local c: gate-class c: 32)
-	(up-filter-distance saved-point-x c: -1 c: gate-reserve-radius)
+	(up-set-target-point saved-point-x)
+	(up-filter-distance c: -1 c: gate-reserve-radius)
 	(up-get-search-state local-total))
 
 (defrule
@@ -72,7 +74,8 @@
 =>
 	(up-full-reset-search)
 	(up-find-local c: gate-class c: 32)
-	(up-filter-distance temporary-point-x c: -1 c: gate-reserve-radius)
+	(up-set-target-point temporary-point-x)
+	(up-filter-distance c: -1 c: gate-reserve-radius)
 	(up-get-search-state local-total))
 
 (defrule

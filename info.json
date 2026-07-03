@@ -1,6 +1,6 @@
 {
     "Author": "Orffyrus",
     "CacheStatus": 0,
-    "Description": "GrokAI v2.0.1: v2.0 + memory.per init split (ERR6002 fix).",
+    "Description": "GrokAI v2.0.2: gatereserve.per filter-distance syntax fix.",
     "Title": "GrokAI"
 }
